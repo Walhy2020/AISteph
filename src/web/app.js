@@ -3,40 +3,30 @@ const version = document.querySelector('meta[name="aisteph-version"]').content;
 
 const elements = {
   serviceStatus: document.querySelector("#service-status"),
-  total: document.querySelector("#stat-total"),
-  pending: document.querySelector("#stat-pending"),
-  uptime: document.querySelector("#stat-uptime"),
-  inbox: document.querySelector("#inbox-list"),
-  template: document.querySelector("#inbox-card-template"),
-  filter: document.querySelector("#type-filter"),
-  refresh: document.querySelector("#refresh-button"),
-  formMessage: document.querySelector("#form-message"),
-  fileInput: document.querySelector("#file-input"),
-  fileName: document.querySelector("#file-name"),
-  recorderDevice: document.querySelector("#recorder-device"),
-  refreshDevices: document.querySelector("#refresh-devices"),
-  recorderTitle: document.querySelector("#recorder-title"),
+  recordingsStat: document.querySelector("#stat-recordings"),
+  durationStat: document.querySelector("#stat-duration"),
+  pendingStat: document.querySelector("#stat-pending"),
   recorderStatus: document.querySelector("#recorder-status"),
   recorderStateLabel: document.querySelector("#recorder-state-label"),
-  recorderDeviceLabel: document.querySelector("#recorder-device-label"),
   recorderDuration: document.querySelector("#recorder-duration"),
+  recorderDeviceLabel: document.querySelector("#recorder-device-label"),
+  recorderDevice: document.querySelector("#recorder-device"),
+  recorderTitle: document.querySelector("#recorder-title"),
+  refreshDevices: document.querySelector("#refresh-devices"),
   startRecording: document.querySelector("#start-recording"),
-  stopRecording: document.querySelector("#stop-recording")
+  stopRecording: document.querySelector("#stop-recording"),
+  formMessage: document.querySelector("#form-message"),
+  recordingList: document.querySelector("#recording-list"),
+  recordingTemplate: document.querySelector("#recording-card-template"),
+  refreshRecordings: document.querySelector("#refresh-recordings")
 };
 
-const typeInfo = {
-  text: { label: "文字记录", glyph: "字", className: "" },
-  article_link: { label: "文章链接", glyph: "链", className: "article" },
-  document: { label: "本地文件", glyph: "档", className: "document" },
-  audio: { label: "录音", glyph: "声", className: "audio" }
-};
-
-let devicesLoaded = false;
+let currentRecorderStatus = { state: "idle", lastError: null };
 let recorderRequestActive = false;
 let recorderStatusRefreshing = false;
 
-async function api(path, options = {}) {
-  const response = await fetch(path, {
+async function api(requestPath, options = {}) {
+  const response = await fetch(requestPath, {
     ...options,
     headers: {
       "X-AISteph-Token": token,
@@ -58,132 +48,9 @@ function setServiceStatus(online, label) {
   elements.serviceStatus.querySelector("span:last-child").textContent = label;
 }
 
-function formatUptime(seconds) {
-  if (seconds < 60) return `${seconds}秒`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟`;
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}时${minutes}分`;
-}
-
-function formatTime(value) {
-  if (!value) return "时间未知";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "时间未知";
-  return new Intl.DateTimeFormat("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  }).format(date);
-}
-
-function renderEmpty(message = "还没有待审核资料") {
-  const container = document.createElement("div");
-  container.className = "empty-state";
-  const title = document.createElement("strong");
-  title.textContent = message;
-  const description = document.createElement("p");
-  description.textContent = "从左侧收录文字、文章、文件或一段录音，它会出现在这里。";
-  container.append(title, description);
-  elements.inbox.replaceChildren(container);
-}
-
-function renderError(error) {
-  const container = document.createElement("div");
-  container.className = "error-state";
-  const title = document.createElement("strong");
-  title.textContent = "收件箱读取失败";
-  const description = document.createElement("p");
-  description.textContent = error.message;
-  container.append(title, description);
-  elements.inbox.replaceChildren(container);
-}
-
-function renderInbox(items) {
-  if (!items.length) {
-    renderEmpty(elements.filter.value ? "当前筛选没有资料" : undefined);
-    return;
-  }
-
-  const fragment = document.createDocumentFragment();
-  for (const item of items) {
-    const card = elements.template.content.firstElementChild.cloneNode(true);
-    const info = typeInfo[item.type] ?? {
-      label: item.type || "未知类型",
-      glyph: "?",
-      className: ""
-    };
-    const icon = card.querySelector(".type-icon");
-    icon.textContent = info.glyph;
-    if (info.className) icon.classList.add(info.className);
-    card.querySelector(".type-label").textContent = info.label;
-    card.querySelector(".captured-time").textContent = formatTime(item.capturedAt);
-    card.querySelector("h3").textContent = item.title || "未命名资料";
-    card.querySelector(".record-id").textContent = item.id;
-
-    const sourceLink = card.querySelector(".source-link");
-    const sourcePath = card.querySelector(".source-path");
-    if (item.sourceUrl) {
-      sourceLink.href = item.sourceUrl;
-      sourceLink.textContent = item.sourceUrl;
-      sourcePath.remove();
-    } else {
-      sourcePath.textContent = item.sourcePath || "原始路径未记录";
-      sourceLink.remove();
-    }
-    fragment.append(card);
-  }
-  elements.inbox.replaceChildren(fragment);
-}
-
-async function refreshDashboard() {
-  elements.refresh.disabled = true;
-  try {
-    const type = elements.filter.value;
-    const query = new URLSearchParams({ status: "pending_review", limit: "100" });
-    if (type) query.set("type", type);
-    const [status, inbox] = await Promise.all([
-      api("/api/status"),
-      api(`/api/inbox?${query}`)
-    ]);
-    setServiceStatus(true, `本地服务在线 · v${status.version}`);
-    elements.total.textContent = status.stats.total;
-    elements.pending.textContent = status.stats.pendingReview;
-    elements.uptime.textContent = formatUptime(status.uptimeSeconds);
-    renderInbox(inbox.items);
-  } catch (error) {
-    setServiceStatus(false, "本地服务异常");
-    renderError(error);
-  } finally {
-    elements.refresh.disabled = false;
-  }
-}
-
 function showMessage(message, kind = "") {
   elements.formMessage.className = `form-message ${kind}`.trim();
   elements.formMessage.textContent = message;
-}
-
-async function submitForm(form, action) {
-  const button = form.querySelector('button[type="submit"]');
-  const original = button.innerHTML;
-  button.disabled = true;
-  button.textContent = "正在保存…";
-  showMessage("");
-  try {
-    const record = await action();
-    showMessage(`已收录 ${record.id}，等待你在 Obsidian 中审核。`, "success");
-    form.reset();
-    elements.fileName.textContent = "选择一个本地文件";
-    await refreshDashboard();
-  } catch (error) {
-    showMessage(error.message, "error");
-  } finally {
-    button.disabled = false;
-    button.innerHTML = original;
-  }
 }
 
 function formatDuration(totalSeconds) {
@@ -196,22 +63,58 @@ function formatDuration(totalSeconds) {
   return parts.join(":");
 }
 
-function renderRecorderStatus(status) {
+function formatTotalDuration(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  if (seconds < 60) return `${seconds}秒`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (!hours) return `${minutes}分`;
+  return `${hours}时${minutes}分`;
+}
+
+function formatTime(value) {
+  if (!value) return "时间未知";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "时间未知";
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).format(date);
+}
+
+function liveElapsedSeconds(status) {
+  if (!status.startedAt || !["starting", "recording", "stopping"].includes(status.state)) {
+    return Number(status.elapsedSeconds) || 0;
+  }
+  return Math.max(
+    Number(status.elapsedSeconds) || 0,
+    Math.floor((Date.now() - Date.parse(status.startedAt)) / 1000)
+  );
+}
+
+function renderRecorderStatus(status = currentRecorderStatus) {
+  currentRecorderStatus = status;
   const state = status.state || "idle";
   const active = ["starting", "recording", "stopping"].includes(state);
-  const stateLabels = {
+  const labels = {
     idle: "准备录音",
-    starting: "正在启动麦克风",
+    starting: "正在连接麦克风",
     recording: "正在录音",
     stopping: "正在保存录音"
   };
-  elements.recorderStatus.className = `recorder-status ${state}`;
-  elements.recorderStateLabel.textContent = stateLabels[state] || "录音状态未知";
+
+  elements.recorderStatus.className = `recording-console ${state}`;
+  elements.recorderStateLabel.textContent = labels[state] || "录音状态未知";
+  elements.recorderDuration.textContent = formatDuration(liveElapsedSeconds(status));
   elements.recorderDeviceLabel.textContent = status.deviceName
     || status.lastError
     || elements.recorderDevice.selectedOptions[0]?.textContent
     || "请选择麦克风";
-  elements.recorderDuration.textContent = formatDuration(status.elapsedSeconds);
+
   elements.recorderDevice.disabled = active || recorderRequestActive;
   elements.recorderTitle.disabled = active || recorderRequestActive;
   elements.refreshDevices.disabled = active || recorderRequestActive;
@@ -219,10 +122,67 @@ function renderRecorderStatus(status) {
   elements.stopRecording.hidden = !active;
   elements.startRecording.disabled = recorderRequestActive || !elements.recorderDevice.value;
   elements.stopRecording.disabled = recorderRequestActive || state === "stopping";
+
   if (state === "idle" && status.lastError) {
     elements.recorderStatus.classList.add("error");
     elements.recorderStateLabel.textContent = "上次录音失败";
   }
+}
+
+function renderEmpty() {
+  const empty = document.createElement("div");
+  empty.className = "empty-state";
+  const icon = document.createElement("span");
+  icon.textContent = "◎";
+  const title = document.createElement("strong");
+  title.textContent = "还没有录音";
+  const description = document.createElement("p");
+  description.textContent = "完成第一段录音后，它会出现在这里并可以直接播放。";
+  empty.append(icon, title, description);
+  elements.recordingList.replaceChildren(empty);
+}
+
+function isAudioPlaybackActive() {
+  return Array.from(elements.recordingList.querySelectorAll("audio"))
+    .some((audio) => !audio.paused && !audio.ended);
+}
+
+function renderRecordings(items) {
+  if (!items.length) {
+    renderEmpty();
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const item of items) {
+    const card = elements.recordingTemplate.content.firstElementChild.cloneNode(true);
+    card.querySelector("h3").textContent = item.title || "未命名录音";
+    card.querySelector(".captured-time").textContent = formatTime(item.capturedAt);
+    card.querySelector(".duration-label").textContent = `时长 ${formatDuration(item.durationSeconds)}`;
+    card.querySelector(".device-label").textContent = item.deviceName || "设备未知";
+    card.querySelector(".record-id").textContent = item.id;
+    card.querySelector(".source-path").textContent = item.sourcePath || "文件路径未知";
+
+    const audio = card.querySelector("audio");
+    if (item.audioUrl) {
+      audio.src = item.audioUrl;
+      audio.addEventListener("play", () => {
+        document.querySelectorAll("audio").forEach((other) => {
+          if (other !== audio) other.pause();
+        });
+      });
+      audio.addEventListener("error", () => {
+        card.classList.add("playback-error");
+        card.querySelector(".analysis-state").textContent = "播放失败";
+      });
+    } else {
+      audio.remove();
+      card.classList.add("playback-error");
+      card.querySelector(".analysis-state").textContent = "文件不可用";
+    }
+    fragment.append(card);
+  }
+  elements.recordingList.replaceChildren(fragment);
 }
 
 async function loadRecorderDevices() {
@@ -248,7 +208,6 @@ async function loadRecorderDevices() {
     if (payload.devices.some((device) => device.name === previous)) {
       elements.recorderDevice.value = previous;
     }
-    devicesLoaded = true;
     showMessage(
       payload.devices.length ? `已检测到 ${payload.devices.length} 个麦克风。` : "未检测到麦克风，请检查连接。",
       payload.devices.length ? "" : "error"
@@ -262,7 +221,7 @@ async function loadRecorderDevices() {
   } finally {
     elements.refreshDevices.disabled = false;
     elements.recorderDevice.disabled = false;
-    renderRecorderStatus({ state: "idle", lastError: null });
+    renderRecorderStatus();
   }
 }
 
@@ -272,92 +231,46 @@ async function refreshRecorderStatus() {
   try {
     renderRecorderStatus(await api("/api/recorder/status"));
   } catch (error) {
-    elements.recorderStatus.className = "recorder-status error";
+    elements.recorderStatus.className = "recording-console error";
     elements.recorderStateLabel.textContent = "录音服务不可用";
     elements.recorderDeviceLabel.textContent = error.message;
   } finally {
     recorderStatusRefreshing = false;
   }
 }
-document.querySelectorAll(".capture-tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    const activeName = tab.dataset.tab;
-    document.querySelectorAll(".capture-tab").forEach((item) => {
-      const active = item === tab;
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-selected", String(active));
-    });
-    document.querySelectorAll(".capture-form").forEach((panel) => {
-      const active = panel.dataset.panel === activeName;
-      panel.hidden = !active;
-      panel.classList.toggle("active", active);
-    });
-    showMessage("");
-    if (activeName === "audio") {
-      if (!devicesLoaded) loadRecorderDevices();
-      refreshRecorderStatus();
-    }
-  });
-});
 
-document.querySelector("#text-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  submitForm(event.currentTarget, async () => {
-    const payload = await api("/api/intake/text", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: data.get("title"),
-        text: data.get("text")
-      })
-    });
-    return payload.record;
-  });
-});
-
-document.querySelector("#link-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  submitForm(event.currentTarget, async () => {
-    const payload = await api("/api/intake/link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: data.get("title"),
-        url: data.get("url")
-      })
-    });
-    return payload.record;
-  });
-});
-
-document.querySelector("#file-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  const file = data.get("file");
-  if (!(file instanceof File) || !file.name) {
-    showMessage("请先选择一个本地文件。", "error");
-    return;
+async function refreshDashboard() {
+  elements.refreshRecordings.disabled = true;
+  try {
+    const [status, inbox] = await Promise.all([
+      api("/api/status"),
+      api("/api/inbox?type=audio&limit=200")
+    ]);
+    setServiceStatus(true, `本地服务在线 · v${status.version}`);
+    elements.recordingsStat.textContent = status.stats.audio?.total ?? 0;
+    elements.durationStat.textContent = formatTotalDuration(
+      status.stats.audio?.durationSeconds ?? 0
+    );
+    elements.pendingStat.textContent = status.stats.audio?.pendingReview ?? 0;
+    renderRecordings(inbox.items);
+  } catch (error) {
+    setServiceStatus(false, "本地服务异常");
+    const container = document.createElement("div");
+    container.className = "error-state";
+    const title = document.createElement("strong");
+    title.textContent = "录音资料库读取失败";
+    const description = document.createElement("p");
+    description.textContent = error.message;
+    container.append(title, description);
+    elements.recordingList.replaceChildren(container);
+  } finally {
+    elements.refreshRecordings.disabled = false;
   }
-  submitForm(event.currentTarget, async () => {
-    const query = new URLSearchParams({
-      name: file.name,
-      title: String(data.get("title") || "")
-    });
-    const payload = await api(`/api/intake/file?${query}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/octet-stream" },
-      body: file
-    });
-    return payload.record;
-  });
-});
+}
 
 elements.refreshDevices.addEventListener("click", loadRecorderDevices);
-elements.recorderDevice.addEventListener("change", () => {
-  renderRecorderStatus({ state: "idle", lastError: null });
-});
+elements.recorderDevice.addEventListener("change", () => renderRecorderStatus());
+elements.refreshRecordings.addEventListener("click", refreshDashboard);
 
 elements.startRecording.addEventListener("click", async () => {
   if (!elements.recorderDevice.value) {
@@ -365,7 +278,7 @@ elements.startRecording.addEventListener("click", async () => {
     return;
   }
   recorderRequestActive = true;
-  elements.startRecording.disabled = true;
+  renderRecorderStatus();
   showMessage("正在启动麦克风，请稍候…");
   try {
     const status = await api("/api/recorder/start", {
@@ -377,7 +290,7 @@ elements.startRecording.addEventListener("click", async () => {
       })
     });
     renderRecorderStatus(status);
-    showMessage("录音已开始。停止后会自动进入统一收件箱。", "success");
+    showMessage("录音已开始。完成后点击“停止并保存”。", "success");
   } catch (error) {
     showMessage(error.message, "error");
   } finally {
@@ -388,12 +301,12 @@ elements.startRecording.addEventListener("click", async () => {
 
 elements.stopRecording.addEventListener("click", async () => {
   recorderRequestActive = true;
-  elements.stopRecording.disabled = true;
-  showMessage("正在停止并校验录音…");
+  renderRecorderStatus({ ...currentRecorderStatus, state: "stopping" });
+  showMessage("正在停止、封装并校验录音…");
   try {
     const payload = await api("/api/recorder/stop", { method: "POST" });
     showMessage(
-      `已收录 ${payload.record.id}（${formatDuration(payload.record.durationSeconds)}），等待你在 Obsidian 中审核。`,
+      `录音已保存：${payload.record.title}（${formatDuration(payload.record.durationSeconds)}）。`,
       "success"
     );
     elements.recorderTitle.value = "";
@@ -405,19 +318,16 @@ elements.stopRecording.addEventListener("click", async () => {
     await refreshRecorderStatus();
   }
 });
-elements.fileInput.addEventListener("change", () => {
-  const file = elements.fileInput.files[0];
-  elements.fileName.textContent = file
-    ? `${file.name} · ${Math.max(1, Math.round(file.size / 1024))} KB`
-    : "选择一个本地文件";
-});
 
-elements.filter.addEventListener("change", refreshDashboard);
-elements.refresh.addEventListener("click", refreshDashboard);
+document.title = `AISteph v${version} · 录音工作台`;
+await Promise.all([
+  refreshDashboard(),
+  refreshRecorderStatus(),
+  loadRecorderDevices()
+]);
 
-document.title = `AISteph v${version} · 个人信息收件箱`;
-await Promise.all([refreshDashboard(), refreshRecorderStatus()]);
-setInterval(refreshDashboard, 30000);
+setInterval(() => renderRecorderStatus(), 1000);
+setInterval(refreshRecorderStatus, 5000);
 setInterval(() => {
-  if (!document.querySelector("#audio-form").hidden) refreshRecorderStatus();
-}, 1000);
+  if (!isAudioPlaybackActive()) refreshDashboard();
+}, 30000);

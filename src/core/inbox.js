@@ -91,13 +91,25 @@ export async function getInboxStats(config) {
   const records = await readRecords(config);
   const byType = {};
   const byStatus = {};
+  let audioDurationSeconds = 0;
+  let audioPendingReview = 0;
   for (const record of records) {
     byType[record.type] = (byType[record.type] ?? 0) + 1;
     byStatus[record.status] = (byStatus[record.status] ?? 0) + 1;
+    if (record.type === "audio") {
+      const duration = Number(record.durationSeconds);
+      if (Number.isFinite(duration) && duration > 0) audioDurationSeconds += duration;
+      if (record.status === "pending_review") audioPendingReview += 1;
+    }
   }
   return {
     total: records.length,
     pendingReview: byStatus.pending_review ?? 0,
+    audio: {
+      total: byType.audio ?? 0,
+      durationSeconds: Math.round(audioDurationSeconds * 1000) / 1000,
+      pendingReview: audioPendingReview
+    },
     byType,
     byStatus
   };

@@ -12,6 +12,7 @@ import { initializeWorkspace } from "./core/workspace.js";
 import { addLink, addText, importFile } from "./core/intake.js";
 import { getInboxStats, listInbox } from "./core/inbox.js";
 import { createRecorder } from "./core/recorder.js";
+import { createAudioUrl, serveAudio } from "./core/media.js";
 import { getVersion } from "./version.js";
 
 const HOST = "127.0.0.1";
@@ -152,6 +153,23 @@ async function serveStatic(pathname, response) {
 
 async function handleApi(context, request, response, requestUrl) {
   const { config, log, recorder, token, startedAt, origin } = context;
+
+  if (requestUrl.pathname.startsWith("/api/audio/")) {
+    const encodedId = requestUrl.pathname.slice("/api/audio/".length);
+    let sourceId;
+    try {
+      sourceId = decodeURIComponent(encodedId);
+    } catch {
+      throw new HttpError(400, "录音记录ID无效");
+    }
+    await serveAudio(config, request, response, {
+      sourceId,
+      access: requestUrl.searchParams.get("access"),
+      serverToken: token
+    });
+    return;
+  }
+
   requireToken(request, token);
 
   if (request.method === "GET" && requestUrl.pathname === "/api/status") {
@@ -180,7 +198,10 @@ async function handleApi(context, request, response, requestUrl) {
       type: requestUrl.searchParams.get("type"),
       status: requestUrl.searchParams.get("status")
     });
-    sendJson(response, 200, { items });
+    const publicItems = items.map((item) => item.type === "audio"
+      ? { ...item, audioUrl: createAudioUrl(token, item.id) }
+      : item);
+    sendJson(response, 200, { items: publicItems });
     return;
   }
 
@@ -291,17 +312,26 @@ export async function createAIStephServer(options = {}) {
       } else {
         sendText(response, 404, "页面不存在");
       }
-      await log("info", "http.request", {
+      const requestLog = {
         method: request.method,
         route: requestUrl.pathname,
         statusCode: response.statusCode,
         durationMs: Date.now() - requestStarted
-      });
+      };
+      if (requestUrl.pathname.startsWith("/api/audio/")) {
+        requestLog.requestRange = String(request.headers.range ?? "full");
+        requestLog.responseBytes = Number(response.aistephAudioBytes ?? 0);
+      }
+      await log("info", "http.request", requestLog);
     } catch (error) {
       const statusCode = error.statusCode ?? 500;
-      sendJson(response, statusCode, {
-        error: statusCode >= 500 ? "本地服务发生错误" : error.message
-      });
+      if (!response.headersSent) {
+        sendJson(response, statusCode, {
+          error: statusCode >= 500 ? "本地服务发生错误" : error.message
+        });
+      } else if (!response.writableEnded) {
+        response.destroy();
+      }
       await log("error", "http.request_failed", {
         method: request.method,
         route: String(request.url ?? "").split("?")[0],

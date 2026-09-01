@@ -32,16 +32,21 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.3.0并设置浏览器安全响应头", async (t) => {
+test("管理台显示v0.4.0且页面只展示录音工作台", async (t) => {
   const { origin } = await createTestServer(t);
   const response = await fetch(origin);
   const html = await response.text();
 
   assert.equal(response.status, 200);
-  assert.match(html, /AISteph v0\.3\.0/);
+  assert.match(html, /AISteph v0\.4\.0/);
   assert.match(html, /type="module"/);
-  assert.match(html, /id="audio-form"/);
-  assert.match(html, /data-tab="audio"/);
+  assert.match(html, /id="recorder-status"/);
+  assert.match(html, /id="recording-list"/);
+  assert.match(html, /<audio controls preload="metadata"><\/audio>/);
+  assert.doesNotMatch(html, /id="text-form"/);
+  assert.doesNotMatch(html, /id="link-form"/);
+  assert.doesNotMatch(html, /id="file-form"/);
+  assert.doesNotMatch(html, /id="type-filter"/);
   assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
 });
@@ -64,7 +69,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.3.0");
+  assert.equal((await status.json()).version, "0.4.0");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {

@@ -2,27 +2,27 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="aisteph-token" content="__AISTEPH_TOKEN__">
   <meta name="aisteph-version" content="__AISTEPH_VERSION__">
-  <title>AISteph · 个人信息收件箱</title>
+  <title>AISteph · 录音工作台</title>
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <div class="page-glow page-glow-one"></div>
-  <div class="page-glow page-glow-two"></div>
+  <div class="ambient ambient-blue"></div>
+  <div class="ambient ambient-red"></div>
 
   <header class="topbar">
-    <a class="brand" href="/" aria-label="AISteph 首页">
+    <a class="brand" href="/" aria-label="AISteph 录音工作台首页">
       <span class="brand-mark">A</span>
-      <span class="brand-copy">
+      <span>
         <strong>AISteph</strong>
-        <small>PERSONAL KNOWLEDGE INBOX</small>
+        <small>RECORDING WORKSPACE</small>
       </span>
     </a>
     <div class="topbar-meta">
-      <span class="status-pill" id="service-status">
-        <span class="status-dot"></span>
+      <span class="service-pill" id="service-status">
+        <span class="service-dot"></span>
         <span>正在连接</span>
       </span>
       <span class="version-pill">v__AISTEPH_VERSION__</span>
@@ -31,102 +31,55 @@
 
   <main class="page-shell">
     <section class="hero">
-      <div class="hero-copy">
-        <span class="eyebrow">LOCAL FIRST · PRIVATE BY DEFAULT</span>
-        <h1>把今天遇到的信息，<br><em>放进一个可信收件箱。</em></h1>
-        <p>文字、文章、文件和录音先保留原始来源，再进入 Obsidian 待审核区。AI不会替你把未经确认的内容当成事实。</p>
+      <div>
+        <span class="eyebrow">LOCAL RECORDING · PRIVATE BY DEFAULT</span>
+        <h1>记录正在发生的事，<br><em>留下可以回看的声音。</em></h1>
+        <p>当前阶段只聚焦录音。声音保存在本机，停止后自动进入录音资料库，等待后续分析和你的确认。</p>
       </div>
-      <div class="hero-stats" aria-label="收件箱统计">
+      <div class="hero-stats" aria-label="录音统计">
         <article>
-          <span>全部资料</span>
-          <strong id="stat-total">—</strong>
-          <small>已收录来源</small>
+          <span>录音总数</span>
+          <strong id="stat-recordings">—</strong>
+          <small>本地音频</small>
+        </article>
+        <article>
+          <span>累计时长</span>
+          <strong id="stat-duration">—</strong>
+          <small>已保存声音</small>
         </article>
         <article class="accent-stat">
-          <span>等待审核</span>
+          <span>等待确认</span>
           <strong id="stat-pending">—</strong>
-          <small>Obsidian Inbox</small>
-        </article>
-        <article>
-          <span>运行时间</span>
-          <strong id="stat-uptime">—</strong>
-          <small>本地服务</small>
+          <small>后续分析队列</small>
         </article>
       </div>
     </section>
 
     <section class="workspace">
-      <aside class="capture-panel">
+      <section class="recorder-panel">
         <div class="section-heading">
           <div>
-            <span class="section-kicker">CAPTURE</span>
-            <h2>快速收录</h2>
+            <span class="section-kicker">RECORDER</span>
+            <h2>开始新录音</h2>
           </div>
-          <span class="privacy-label">仅保存在本机</span>
+          <span class="privacy-label">音频仅保存在本机</span>
         </div>
 
-        <div class="capture-tabs" role="tablist" aria-label="收录方式">
-          <button class="capture-tab active" data-tab="text" role="tab" aria-selected="true">文字</button>
-          <button class="capture-tab" data-tab="link" role="tab" aria-selected="false">文章</button>
-          <button class="capture-tab" data-tab="file" role="tab" aria-selected="false">文件</button>
-          <button class="capture-tab" data-tab="audio" role="tab" aria-selected="false">录音</button>
+        <div class="recording-console idle" id="recorder-status" aria-live="polite">
+          <div class="recording-orbit">
+            <span class="recording-core"></span>
+          </div>
+          <div class="recording-state">
+            <span id="recorder-state-label">准备录音</span>
+            <strong id="recorder-duration">00:00</strong>
+            <small id="recorder-device-label">请选择麦克风</small>
+          </div>
         </div>
 
-        <form class="capture-form active" id="text-form" data-panel="text">
+        <div class="recorder-fields">
           <label>
-            <span>标题 <small>选填</small></span>
-            <input name="title" type="text" maxlength="200" placeholder="例如：今天想到的产品改进">
-          </label>
-          <label>
-            <span>记录内容</span>
-            <textarea name="text" rows="9" required placeholder="先把内容留下来，后续再慢慢整理……"></textarea>
-          </label>
-          <button class="primary-button" type="submit">
-            <span>放入收件箱</span>
-            <span aria-hidden="true">→</span>
-          </button>
-        </form>
-
-        <form class="capture-form" id="link-form" data-panel="link" hidden>
-          <label>
-            <span>文章链接</span>
-            <input name="url" type="url" required placeholder="https://example.com/article">
-          </label>
-          <label>
-            <span>自定义标题 <small>选填</small></span>
-            <input name="title" type="text" maxlength="200" placeholder="不填写时使用网站域名">
-          </label>
-          <div class="form-note">
-            <strong>当前阶段</strong>
-            <span>保存链接和来源信息，网页正文抓取将在后续版本接入。</span>
-          </div>
-          <button class="primary-button" type="submit">
-            <span>保存文章</span>
-            <span aria-hidden="true">→</span>
-          </button>
-        </form>
-
-        <form class="capture-form" id="file-form" data-panel="file" hidden>
-          <label class="file-drop" for="file-input">
-            <span class="file-icon">↑</span>
-            <strong id="file-name">选择一个本地文件</strong>
-            <small>PDF、Word、图片或其他个人资料</small>
-            <input id="file-input" name="file" type="file" required>
-          </label>
-          <label>
-            <span>自定义标题 <small>选填</small></span>
-            <input name="title" type="text" maxlength="200" placeholder="不填写时使用原文件名">
-          </label>
-          <button class="primary-button" type="submit">
-            <span>导入文件</span>
-            <span aria-hidden="true">→</span>
-          </button>
-        </form>
-
-        <section class="capture-form recorder-form" id="audio-form" data-panel="audio" hidden>
-          <label>
-            <span>麦克风</span>
-            <div class="recorder-device-row">
+            <span>录音设备</span>
+            <div class="device-row">
               <select id="recorder-device" aria-label="录音麦克风">
                 <option value="">正在读取麦克风…</option>
               </select>
@@ -134,94 +87,84 @@
             </div>
           </label>
           <label>
-            <span>录音标题 <small>选填</small></span>
-            <input id="recorder-title" type="text" maxlength="200" placeholder="例如：产品讨论记录">
+            <span>这段录音的标题 <small>选填</small></span>
+            <input id="recorder-title" type="text" maxlength="200" placeholder="例如：9月项目讨论">
           </label>
-          <div class="recorder-status idle" id="recorder-status" aria-live="polite">
-            <span class="recorder-indicator" aria-hidden="true"></span>
-            <div>
-              <strong id="recorder-state-label">准备录音</strong>
-              <small id="recorder-device-label">请选择麦克风</small>
-            </div>
-            <time id="recorder-duration">00:00</time>
-          </div>
-          <div class="recorder-actions">
-            <button class="primary-button" id="start-recording" type="button">
-              <span>开始录音</span>
-              <span aria-hidden="true">●</span>
-            </button>
-            <button class="danger-button" id="stop-recording" type="button" hidden>
-              <span>停止并收录</span>
-              <span aria-hidden="true">■</span>
-            </button>
-          </div>
-          <div class="form-note">
-            <strong>手动事件录音</strong>
-            <span>音频以 Opus 保存在本机；停止后才进入统一收件箱。本版本暂不进行 AI 转写。</span>
-          </div>
-        </section>
-
-        <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
-      </aside>
-
-      <section class="inbox-panel">
-        <div class="section-heading inbox-heading">
-          <div>
-            <span class="section-kicker">INBOX</span>
-            <h2>待审核资料</h2>
-          </div>
-          <div class="inbox-actions">
-            <label class="select-label">
-              <span class="sr-only">按类型筛选</span>
-              <select id="type-filter">
-                <option value="">全部类型</option>
-                <option value="text">文字记录</option>
-                <option value="article_link">文章链接</option>
-                <option value="document">本地文件</option>
-                <option value="audio">录音</option>
-              </select>
-            </label>
-            <button class="icon-button" id="refresh-button" type="button" aria-label="刷新收件箱">↻</button>
-          </div>
         </div>
 
-        <div class="inbox-list" id="inbox-list" aria-live="polite">
-          <div class="loading-card">
-            <span class="loading-line wide"></span>
-            <span class="loading-line"></span>
-            <span class="loading-line short"></span>
+        <div class="recording-actions">
+          <button class="record-button" id="start-recording" type="button">
+            <span class="button-record-dot"></span>
+            <span>开始录音</span>
+          </button>
+          <button class="stop-button" id="stop-recording" type="button" hidden>
+            <span class="button-stop-square"></span>
+            <span>停止并保存</span>
+          </button>
+        </div>
+
+        <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
+
+        <div class="recorder-footnote">
+          <span>OPUS · 48 KHZ</span>
+          <span>停止后自动校验并进入资料库</span>
+        </div>
+      </section>
+
+      <section class="library-panel">
+        <div class="section-heading library-heading">
+          <div>
+            <span class="section-kicker">RECORDINGS</span>
+            <h2>录音资料库</h2>
           </div>
-          <div class="loading-card">
-            <span class="loading-line wide"></span>
-            <span class="loading-line"></span>
-            <span class="loading-line short"></span>
-          </div>
+          <button class="refresh-button" id="refresh-recordings" type="button" aria-label="刷新录音资料库">
+            <span aria-hidden="true">↻</span>
+            <span>刷新</span>
+          </button>
+        </div>
+
+        <div class="recording-list" id="recording-list" aria-live="polite">
+          <article class="skeleton-card">
+            <span class="skeleton-line wide"></span>
+            <span class="skeleton-line"></span>
+            <span class="skeleton-player"></span>
+          </article>
+          <article class="skeleton-card">
+            <span class="skeleton-line wide"></span>
+            <span class="skeleton-line short"></span>
+            <span class="skeleton-player"></span>
+          </article>
         </div>
       </section>
     </section>
   </main>
 
   <footer class="footer">
-    <span>AISteph v__AISTEPH_VERSION__</span>
-    <span>本地数据 · 人工审核 · 来源可追溯</span>
+    <span>AISteph v__AISTEPH_VERSION__ · Recording Workspace</span>
+    <span>本地录音 · 人工确认 · 来源可追溯</span>
   </footer>
 
-  <template id="inbox-card-template">
-    <article class="inbox-card">
-      <div class="type-icon"></div>
-      <div class="card-main">
-        <div class="card-topline">
-          <span class="type-label"></span>
-          <span class="captured-time"></span>
+  <template id="recording-card-template">
+    <article class="recording-card">
+      <header class="card-header">
+        <div class="card-title-wrap">
+          <span class="audio-glyph" aria-hidden="true">声</span>
+          <div>
+            <h3></h3>
+            <time class="captured-time"></time>
+          </div>
         </div>
-        <h3></h3>
-        <a class="source-link" target="_blank" rel="noreferrer"></a>
-        <code class="source-path"></code>
-        <div class="card-footer">
-          <span class="review-state">待审核</span>
-          <span class="record-id"></span>
-        </div>
+        <span class="analysis-state">等待分析</span>
+      </header>
+      <audio controls preload="metadata"></audio>
+      <div class="recording-meta">
+        <span class="duration-label"></span>
+        <span class="device-label"></span>
       </div>
+      <footer class="card-footer">
+        <code class="record-id"></code>
+        <code class="source-path"></code>
+      </footer>
     </article>
   </template>
 
