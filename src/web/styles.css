@@ -229,7 +229,6 @@ audio:focus-visible {
   font: 500 28px/1.15 Georgia, "Noto Serif SC", serif;
 }
 
-
 .recording-console {
   min-height: 240px;
   margin: 0 0 25px;
@@ -265,6 +264,26 @@ audio:focus-visible {
   transition: 180ms ease;
 }
 
+.recording-waveform {
+  width: min(360px, calc(100% - 36px));
+  height: 88px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.recording-waveform span {
+  width: 4px;
+  min-height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e06a61, var(--red));
+  box-shadow: 0 0 9px rgba(198, 72, 63, 0.12);
+  transition: height 180ms ease, opacity 180ms ease;
+}
+
 .recording-state {
   min-width: 0;
   display: grid;
@@ -284,15 +303,6 @@ audio:focus-visible {
   letter-spacing: -1.5px;
 }
 
-.recording-state small {
-  max-width: 330px;
-  overflow: hidden;
-  color: #929b9d;
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .recording-console.recording {
   border-color: rgba(198, 72, 63, 0.24);
   background:
@@ -300,17 +310,18 @@ audio:focus-visible {
     rgba(255, 255, 255, 0.62);
 }
 
-.recording-console.recording .recording-orbit {
-  border-color: rgba(198, 72, 63, 0.2);
-  background: rgba(198, 72, 63, 0.05);
-  box-shadow: 0 0 0 12px rgba(198, 72, 63, 0.035);
+.recording-console.recording .recording-orbit,
+.recording-console.stopping .recording-orbit {
+  display: none;
 }
 
-.recording-console.recording .recording-core {
-  border-color: rgba(198, 72, 63, 0.15);
-  background: var(--red);
-  box-shadow: 0 0 0 7px rgba(198, 72, 63, 0.08);
-  animation: record-pulse 1.35s ease-in-out infinite;
+.recording-console.recording .recording-waveform,
+.recording-console.stopping .recording-waveform {
+  display: flex;
+}
+
+.recording-console.stopping .recording-waveform span {
+  background: var(--blue);
 }
 
 .recording-console.starting .recording-core,
@@ -811,10 +822,6 @@ audio:focus-visible {
   .recorder-panel,
   .library-panel {
     padding: 23px 17px;
-  }
-
-  .privacy-label {
-    display: none;
   }
 
   .recording-console {

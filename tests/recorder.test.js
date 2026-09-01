@@ -61,6 +61,11 @@ function createSpawnHarness({ failStart = false } = {}) {
         child.stderr.end();
         child.emit("close", 1, null);
       });
+    } else {
+      queueMicrotask(() => {
+        child.stderr.write("[Parsed_ametadata] lavfi.astats.Overall.RMS_level=-18");
+        child.stderr.write(".75\n");
+      });
     }
     return child;
   };
@@ -98,11 +103,11 @@ test("录音停止后生成Opus音频记录、队列和Obsidian待审核笔记",
   });
   assert.equal(started.state, "recording");
   assert.equal(started.gainDb, 12);
+  assert.equal(started.audioLevelDb, -18.75);
   const recordingCall = harness.calls.find((call) => !call.args.includes("-list_devices"));
-  assert.deepEqual(
-    recordingCall.args.slice(recordingCall.args.indexOf("-af"), recordingCall.args.indexOf("-af") + 2),
-    ["-af", "volume=12dB"]
-  );
+  const audioFilter = recordingCall.args[recordingCall.args.indexOf("-af") + 1];
+  assert.match(audioFilter, /^volume=12dB,astats=/);
+  assert.match(audioFilter, /ametadata=print:key=lavfi\.astats\.Overall\.RMS_level$/);
   await assert.rejects(
     () => recorder.start({ deviceName: "Desk Microphone" }),
     /已有一场录音/
@@ -171,7 +176,7 @@ test("服务退出时主动停止录音并完成入库", async (t) => {
 
   await recorder.start({ deviceName: "Desk Microphone" });
   const recordingCall = harness.calls.find((call) => !call.args.includes("-list_devices"));
-  assert.equal(recordingCall.args.includes("volume=0dB"), true);
+  assert.equal(recordingCall.args.some((argument) => argument.startsWith("volume=0dB,")), true);
   await recorder.shutdown();
 
   assert.equal(recorder.status().state, "idle");

@@ -9,6 +9,7 @@ const STOP_TIMEOUT_MS = 6000;
 const KILL_TIMEOUT_MS = 2000;
 const MIN_GAIN_DB = 0;
 const MAX_GAIN_DB = 24;
+const AUDIO_LEVEL_PATTERN = /lavfi\.astats\.Overall\.RMS_level=(-?(?:\d+(?:\.\d+)?|inf))/i;
 
 export class RecorderError extends Error {
   constructor(statusCode, message) {
@@ -32,6 +33,20 @@ function normalizeGainDb(value) {
     throw new RecorderError(400, "录音增益必须在0到24dB之间");
   }
   return Math.round(gainDb * 10) / 10;
+}
+
+function updateSessionAudioLevel(session, chunkText) {
+  const combined = session.levelBuffer + chunkText;
+  const lines = combined.split(/\r?\n/);
+  session.levelBuffer = lines.pop().slice(-200);
+  for (const line of lines) {
+    const match = line.match(AUDIO_LEVEL_PATTERN);
+    if (!match) continue;
+    const levelDb = match[1].toLowerCase() === "-inf" ? -90 : Number(match[1]);
+    if (Number.isFinite(levelDb)) {
+      session.audioLevelDb = Math.max(-90, Math.min(0, levelDb));
+    }
+  }
 }
 
 export function parseDshowDevices(output) {
@@ -157,6 +172,7 @@ export function createRecorder(config, log, options = {}) {
       title: active.title,
       deviceName: active.deviceName,
       gainDb: active.gainDb,
+      audioLevelDb: active.audioLevelDb,
       startedAt: active.startedAt,
       elapsedSeconds: Math.max(
         0,
@@ -199,10 +215,15 @@ export function createRecorder(config, log, options = {}) {
     await mkdir(dayDirectory, { recursive: true });
     const temporaryPath = path.join(dayDirectory, `.${sessionId}.part.opus`);
     const finalPath = path.join(dayDirectory, `${sessionId}.opus`);
+    const audioFilter = [
+      `volume=${normalizedGainDb}dB`,
+      "astats=metadata=1:reset=1:measure_overall=RMS_level:measure_perchannel=none",
+      "ametadata=print:key=lavfi.astats.Overall.RMS_level"
+    ].join(",");
     const child = spawnImpl(ffmpegPath, [
       "-hide_banner", "-loglevel", "info",
       "-f", "dshow", "-i", `audio=${normalizedDevice}`,
-      "-af", `volume=${normalizedGainDb}dB`,
+      "-af", audioFilter,
       "-vn", "-c:a", "libopus", "-b:a", "48k", "-application", "voip",
       "-y", temporaryPath
     ], {
@@ -220,11 +241,15 @@ export function createRecorder(config, log, options = {}) {
       child,
       state: "starting",
       completion: processCompletion(child),
-      stderrTail: ""
+      stderrTail: "",
+      levelBuffer: "",
+      audioLevelDb: -90
     };
     active = session;
     child.stderr?.on("data", (chunk) => {
-      session.stderrTail = `${session.stderrTail}${chunk.toString("utf8")}`.slice(-4000);
+      const chunkText = chunk.toString("utf8");
+      session.stderrTail = `${session.stderrTail}${chunkText}`.slice(-4000);
+      updateSessionAudioLevel(session, chunkText);
     });
 
     const startupResult = await Promise.race([

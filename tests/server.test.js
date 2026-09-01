@@ -32,20 +32,23 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.4.2且提供紧凑录音增益设置", async (t) => {
+test("管理台显示v0.4.3、提供实时声纹并隐藏设备名称", async (t) => {
   const { origin } = await createTestServer(t);
-  const [response, stylesResponse] = await Promise.all([
+  const [response, stylesResponse, scriptResponse] = await Promise.all([
     fetch(origin),
-    fetch(`${origin}/assets/styles.css`)
+    fetch(`${origin}/assets/styles.css`),
+    fetch(`${origin}/assets/app.js`)
   ]);
-  const [html, styles] = await Promise.all([
+  const [html, styles, script] = await Promise.all([
     response.text(),
-    stylesResponse.text()
+    stylesResponse.text(),
+    scriptResponse.text()
   ]);
 
   assert.equal(response.status, 200);
   assert.equal(stylesResponse.status, 200);
-  assert.match(html, /AISteph v0\.4\.2/);
+  assert.equal(scriptResponse.status, 200);
+  assert.match(html, /AISteph v0\.4\.3/);
   assert.match(html, /type="module"/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
@@ -54,6 +57,8 @@ test("管理台显示v0.4.2且提供紧凑录音增益设置", async (t) => {
   assert.match(html, /id="recorder-settings-toggle"/);
   assert.match(html, /id="recorder-settings-panel"/);
   assert.match(html, /id="recorder-gain"/);
+  assert.match(html, /id="recording-waveform"/);
+  assert.doesNotMatch(html, /id="recorder-device-label"/);
   assert.doesNotMatch(html, /section-kicker">RECORDER/);
   assert.doesNotMatch(html, /开始新录音/);
   assert.doesNotMatch(html, /音频仅保存在本机/);
@@ -64,6 +69,10 @@ test("管理台显示v0.4.2且提供紧凑录音增益设置", async (t) => {
   assert.doesNotMatch(html, /class="source-path"/);
   assert.match(styles, /height: calc\(100vh - 245px\)/);
   assert.match(styles, /padding: 11px 13px 12px/);
+  assert.match(styles, /\.recording-console\.recording \.recording-waveform/);
+  assert.match(script, /WAVEFORM_BAR_COUNT = 43/);
+  assert.match(script, /audioLevelDb/);
+  assert.match(script, /}, 250\);/);
   assert.doesNotMatch(html, /id="text-form"/);
   assert.doesNotMatch(html, /id="link-form"/);
   assert.doesNotMatch(html, /id="file-form"/);
@@ -90,7 +99,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.4.2");
+  assert.equal((await status.json()).version, "0.4.3");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
@@ -189,6 +198,7 @@ test("录音API枚举设备、启动、查询状态并在停止后返回统一�
         deviceName: input.deviceName,
         title: input.title,
         gainDb: input.gainDb,
+        audioLevelDb: -18.5,
         startedAt: new Date().toISOString(),
         elapsedSeconds: 0,
         lastError: null
@@ -228,7 +238,9 @@ test("录音API枚举设备、启动、查询状态并在停止后返回统一�
   const statusResponse = await fetch(`${origin}/api/recorder/status`, {
     headers: tokenHeaders(app, origin)
   });
-  assert.equal((await statusResponse.json()).sessionId, "REC-TEST");
+  const recorderStatus = await statusResponse.json();
+  assert.equal(recorderStatus.sessionId, "REC-TEST");
+  assert.equal(recorderStatus.audioLevelDb, -18.5);
 
   const stopResponse = await fetch(`${origin}/api/recorder/stop`, {
     method: "POST",

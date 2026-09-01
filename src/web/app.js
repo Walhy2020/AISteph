@@ -6,7 +6,7 @@ const elements = {
   recorderStatus: document.querySelector("#recorder-status"),
   recorderStateLabel: document.querySelector("#recorder-state-label"),
   recorderDuration: document.querySelector("#recorder-duration"),
-  recorderDeviceLabel: document.querySelector("#recorder-device-label"),
+  recorderWaveform: document.querySelector("#recording-waveform"),
   recorderDevice: document.querySelector("#recorder-device"),
   recorderTitle: document.querySelector("#recorder-title"),
   recorderSettingsToggle: document.querySelector("#recorder-settings-toggle"),
@@ -26,6 +26,36 @@ let currentRecorderStatus = { state: "idle", lastError: null };
 let recorderRequestActive = false;
 let recorderStatusRefreshing = false;
 const RECORDER_GAIN_STORAGE_KEY = "aisteph.recorder.gainDb";
+const WAVEFORM_BAR_COUNT = 43;
+const waveformBars = Array.from({ length: WAVEFORM_BAR_COUNT }, () => {
+  const bar = document.createElement("span");
+  elements.recorderWaveform.append(bar);
+  return bar;
+});
+let waveformHistory = Array(WAVEFORM_BAR_COUNT).fill(0);
+
+function normalizeAudioLevel(levelDb) {
+  const numericLevel = Number(levelDb);
+  if (!Number.isFinite(numericLevel)) return 0;
+  return Math.max(0, Math.min(1, (numericLevel + 60) / 54));
+}
+
+function renderWaveform(status) {
+  if (status.state === "recording") {
+    const measuredLevel = Math.pow(normalizeAudioLevel(status.audioLevelDb), 0.72);
+    const previousLevel = waveformHistory.at(-1) || 0;
+    waveformHistory.push(Math.max(measuredLevel, previousLevel * 0.72));
+    waveformHistory = waveformHistory.slice(-WAVEFORM_BAR_COUNT);
+  } else if (status.state === "idle") {
+    waveformHistory = Array(WAVEFORM_BAR_COUNT).fill(0);
+  }
+
+  waveformBars.forEach((bar, index) => {
+    const level = waveformHistory[index] || 0;
+    bar.style.height = Math.round(7 + level * 69) + "px";
+    bar.style.opacity = String(0.3 + level * 0.7);
+  });
+}
 
 function normalizeGainDb(value) {
   const gainDb = Number(value);
@@ -133,10 +163,7 @@ function renderRecorderStatus(status = currentRecorderStatus) {
   elements.recorderStatus.className = `recording-console ${state}`;
   elements.recorderStateLabel.textContent = labels[state] || "录音状态未知";
   elements.recorderDuration.textContent = formatDuration(liveElapsedSeconds(status));
-  elements.recorderDeviceLabel.textContent = status.deviceName
-    || status.lastError
-    || elements.recorderDevice.selectedOptions[0]?.textContent
-    || "请选择麦克风";
+  renderWaveform(status);
 
   elements.recorderDevice.disabled = active || recorderRequestActive;
   elements.recorderTitle.disabled = active || recorderRequestActive;
@@ -261,7 +288,7 @@ async function refreshRecorderStatus() {
   } catch (error) {
     elements.recorderStatus.className = "recording-console error";
     elements.recorderStateLabel.textContent = "录音服务不可用";
-    elements.recorderDeviceLabel.textContent = error.message;
+    showMessage(error.message, "error");
   } finally {
     recorderStatusRefreshing = false;
   }
@@ -374,6 +401,11 @@ await Promise.all([
 
 setInterval(() => renderRecorderStatus(), 1000);
 setInterval(refreshRecorderStatus, 5000);
+setInterval(() => {
+  if (["recording", "stopping"].includes(currentRecorderStatus.state)) {
+    refreshRecorderStatus();
+  }
+}, 250);
 setInterval(() => {
   if (!isAudioPlaybackActive()) refreshDashboard();
 }, 30000);
