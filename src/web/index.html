@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="aisteph-token" content="__AISTEPH_TOKEN__">
+  <meta name="aisteph-version" content="__AISTEPH_VERSION__">
+  <title>AISteph · 个人信息收件箱</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="page-glow page-glow-one"></div>
+  <div class="page-glow page-glow-two"></div>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="AISteph 首页">
+      <span class="brand-mark">A</span>
+      <span class="brand-copy">
+        <strong>AISteph</strong>
+        <small>PERSONAL KNOWLEDGE INBOX</small>
+      </span>
+    </a>
+    <div class="topbar-meta">
+      <span class="status-pill" id="service-status">
+        <span class="status-dot"></span>
+        <span>正在连接</span>
+      </span>
+      <span class="version-pill">v__AISTEPH_VERSION__</span>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">LOCAL FIRST · PRIVATE BY DEFAULT</span>
+        <h1>把今天遇到的信息，<br><em>放进一个可信收件箱。</em></h1>
+        <p>文字、文章和文件先保留原始来源，再进入 Obsidian 待审核区。AI不会替你把未经确认的内容当成事实。</p>
+      </div>
+      <div class="hero-stats" aria-label="收件箱统计">
+        <article>
+          <span>全部资料</span>
+          <strong id="stat-total">—</strong>
+          <small>已收录来源</small>
+        </article>
+        <article class="accent-stat">
+          <span>等待审核</span>
+          <strong id="stat-pending">—</strong>
+          <small>Obsidian Inbox</small>
+        </article>
+        <article>
+          <span>运行时间</span>
+          <strong id="stat-uptime">—</strong>
+          <small>本地服务</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <aside class="capture-panel">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">CAPTURE</span>
+            <h2>快速收录</h2>
+          </div>
+          <span class="privacy-label">仅保存在本机</span>
+        </div>
+
+        <div class="capture-tabs" role="tablist" aria-label="收录方式">
+          <button class="capture-tab active" data-tab="text" role="tab" aria-selected="true">文字</button>
+          <button class="capture-tab" data-tab="link" role="tab" aria-selected="false">文章</button>
+          <button class="capture-tab" data-tab="file" role="tab" aria-selected="false">文件</button>
+        </div>
+
+        <form class="capture-form active" id="text-form" data-panel="text">
+          <label>
+            <span>标题 <small>选填</small></span>
+            <input name="title" type="text" maxlength="200" placeholder="例如：今天想到的产品改进">
+          </label>
+          <label>
+            <span>记录内容</span>
+            <textarea name="text" rows="9" required placeholder="先把内容留下来，后续再慢慢整理……"></textarea>
+          </label>
+          <button class="primary-button" type="submit">
+            <span>放入收件箱</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <form class="capture-form" id="link-form" data-panel="link" hidden>
+          <label>
+            <span>文章链接</span>
+            <input name="url" type="url" required placeholder="https://example.com/article">
+          </label>
+          <label>
+            <span>自定义标题 <small>选填</small></span>
+            <input name="title" type="text" maxlength="200" placeholder="不填写时使用网站域名">
+          </label>
+          <div class="form-note">
+            <strong>当前阶段</strong>
+            <span>保存链接和来源信息，网页正文抓取将在后续版本接入。</span>
+          </div>
+          <button class="primary-button" type="submit">
+            <span>保存文章</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <form class="capture-form" id="file-form" data-panel="file" hidden>
+          <label class="file-drop" for="file-input">
+            <span class="file-icon">↑</span>
+            <strong id="file-name">选择一个本地文件</strong>
+            <small>PDF、Word、图片或其他个人资料</small>
+            <input id="file-input" name="file" type="file" required>
+          </label>
+          <label>
+            <span>自定义标题 <small>选填</small></span>
+            <input name="title" type="text" maxlength="200" placeholder="不填写时使用原文件名">
+          </label>
+          <button class="primary-button" type="submit">
+            <span>导入文件</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
+      </aside>
+
+      <section class="inbox-panel">
+        <div class="section-heading inbox-heading">
+          <div>
+            <span class="section-kicker">INBOX</span>
+            <h2>待审核资料</h2>
+          </div>
+          <div class="inbox-actions">
+            <label class="select-label">
+              <span class="sr-only">按类型筛选</span>
+              <select id="type-filter">
+                <option value="">全部类型</option>
+                <option value="text">文字记录</option>
+                <option value="article_link">文章链接</option>
+                <option value="document">本地文件</option>
+              </select>
+            </label>
+            <button class="icon-button" id="refresh-button" type="button" aria-label="刷新收件箱">↻</button>
+          </div>
+        </div>
+
+        <div class="inbox-list" id="inbox-list" aria-live="polite">
+          <div class="loading-card">
+            <span class="loading-line wide"></span>
+            <span class="loading-line"></span>
+            <span class="loading-line short"></span>
+          </div>
+          <div class="loading-card">
+            <span class="loading-line wide"></span>
+            <span class="loading-line"></span>
+            <span class="loading-line short"></span>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>AISteph v__AISTEPH_VERSION__</span>
+    <span>本地数据 · 人工审核 · 来源可追溯</span>
+  </footer>
+
+  <template id="inbox-card-template">
+    <article class="inbox-card">
+      <div class="type-icon"></div>
+      <div class="card-main">
+        <div class="card-topline">
+          <span class="type-label"></span>
+          <span class="captured-time"></span>
+        </div>
+        <h3></h3>
+        <a class="source-link" target="_blank" rel="noreferrer"></a>
+        <code class="source-path"></code>
+        <div class="card-footer">
+          <span class="review-state">待审核</span>
+          <span class="record-id"></span>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

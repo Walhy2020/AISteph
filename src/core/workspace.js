@@ -41,7 +41,9 @@ export async function initializeWorkspace(config) {
     vaultRoot: config.vaultRoot,
     logsRoot: config.logsRoot,
     defaultVisibility: config.defaultVisibility,
-    rawAudioRetentionHours: config.rawAudioRetentionHours
+    rawAudioRetentionHours: config.rawAudioRetentionHours,
+    serverPort: config.serverPort,
+    maxUploadBytes: config.maxUploadBytes
   };
   await writeFile(localConfigPath, `${JSON.stringify(localConfig, null, 2)}\n`, {
     encoding: "utf8",

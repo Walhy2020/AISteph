@@ -1,8 +1,10 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "dataRoot": "./data",
   "vaultRoot": "./vault",
   "logsRoot": "./logs",
   "defaultVisibility": "private",
-  "rawAudioRetentionHours": 72
+  "rawAudioRetentionHours": 72,
+  "serverPort": 39310,
+  "maxUploadBytes": 104857600
 }

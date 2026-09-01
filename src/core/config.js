@@ -2,12 +2,14 @@ import path from "node:path";
 import { readFile } from "node:fs/promises";
 
 export const DEFAULT_CONFIG = Object.freeze({
-  version: "0.1.0",
+  version: "0.2.0",
   dataRoot: "./data",
   vaultRoot: "./vault",
   logsRoot: "./logs",
   defaultVisibility: "private",
-  rawAudioRetentionHours: 72
+  rawAudioRetentionHours: 72,
+  serverPort: 39310,
+  maxUploadBytes: 104857600
 });
 
 function resolveWorkspacePath(workspaceRoot, configuredPath, fieldName) {
@@ -38,6 +40,12 @@ export async function loadConfig(workspaceRoot) {
   }
 
   const config = { ...DEFAULT_CONFIG, ...custom };
+  if (!Number.isInteger(config.serverPort) || config.serverPort < 1024 || config.serverPort > 65535) {
+    throw new Error("serverPort 必须是 1024 到 65535 之间的整数");
+  }
+  if (!Number.isInteger(config.maxUploadBytes) || config.maxUploadBytes < 1) {
+    throw new Error("maxUploadBytes 必须是正整数");
+  }
   return {
     ...config,
     workspaceRoot: path.resolve(workspaceRoot),

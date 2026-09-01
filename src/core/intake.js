@@ -161,7 +161,7 @@ export async function addLink(config, log, { title, url }) {
   return persistRecord(config, log, record, `> 待抓取和分析：${normalizedUrl}`);
 }
 
-export async function importFile(config, log, { title, inputPath }) {
+export async function importFile(config, log, { title, inputPath, originalName: suppliedName }) {
   if (!inputPath) throw new Error("必须提供待导入文件路径");
   const absoluteInput = path.resolve(inputPath);
   const inputInfo = await stat(absoluteInput);
@@ -170,7 +170,8 @@ export async function importFile(config, log, { title, inputPath }) {
   }
   const hash = await sha256File(absoluteInput);
   const now = new Date();
-  const originalName = path.basename(absoluteInput);
+  const originalName = path.basename(String(suppliedName || absoluteInput)).trim();
+  if (!originalName) throw new Error("导入文件名不能为空");
   const record = createBaseRecord(
     config,
     "document",
