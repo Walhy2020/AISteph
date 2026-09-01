@@ -7,6 +7,8 @@ import { addAudio } from "./intake.js";
 const START_TIMEOUT_MS = 2000;
 const STOP_TIMEOUT_MS = 6000;
 const KILL_TIMEOUT_MS = 2000;
+const MIN_GAIN_DB = 0;
+const MAX_GAIN_DB = 24;
 
 export class RecorderError extends Error {
   constructor(statusCode, message) {
@@ -22,6 +24,14 @@ function compactStamp(date) {
 
 function wait(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function normalizeGainDb(value) {
+  const gainDb = Number(value ?? 0);
+  if (!Number.isFinite(gainDb) || gainDb < MIN_GAIN_DB || gainDb > MAX_GAIN_DB) {
+    throw new RecorderError(400, "录音增益必须在0到24dB之间");
+  }
+  return Math.round(gainDb * 10) / 10;
 }
 
 export function parseDshowDevices(output) {
@@ -146,6 +156,7 @@ export function createRecorder(config, log, options = {}) {
       sessionId: active.sessionId,
       title: active.title,
       deviceName: active.deviceName,
+      gainDb: active.gainDb,
       startedAt: active.startedAt,
       elapsedSeconds: Math.max(
         0,
@@ -167,11 +178,12 @@ export function createRecorder(config, log, options = {}) {
     }).catch(() => {});
   }
 
-  async function start({ deviceName, title } = {}) {
+  async function start({ deviceName, title, gainDb } = {}) {
     if (active) throw new RecorderError(409, "已有一场录音正在进行");
     const normalizedDevice = String(deviceName ?? "").trim();
     if (!normalizedDevice) throw new RecorderError(400, "请选择麦克风");
     if (normalizedDevice.length > 300) throw new RecorderError(400, "麦克风名称过长");
+    const normalizedGainDb = normalizeGainDb(gainDb);
     const devices = await listDevices();
     if (!devices.some((device) => device.name === normalizedDevice)) {
       throw new RecorderError(400, "所选麦克风当前不可用，请刷新设备列表");
@@ -190,6 +202,7 @@ export function createRecorder(config, log, options = {}) {
     const child = spawnImpl(ffmpegPath, [
       "-hide_banner", "-loglevel", "info",
       "-f", "dshow", "-i", `audio=${normalizedDevice}`,
+      "-af", `volume=${normalizedGainDb}dB`,
       "-vn", "-c:a", "libopus", "-b:a", "48k", "-application", "voip",
       "-y", temporaryPath
     ], {
@@ -200,6 +213,7 @@ export function createRecorder(config, log, options = {}) {
       sessionId,
       title: String(title ?? "").trim().slice(0, 200),
       deviceName: normalizedDevice,
+      gainDb: normalizedGainDb,
       startedAt: started.toISOString(),
       temporaryPath,
       finalPath,
@@ -240,6 +254,7 @@ export function createRecorder(config, log, options = {}) {
     await log("info", "recorder.started", {
       sessionId,
       deviceName: normalizedDevice,
+      gainDb: normalizedGainDb,
       startedAt: session.startedAt
     }).catch(() => {});
     return status();

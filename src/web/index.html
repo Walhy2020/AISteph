@@ -32,13 +32,6 @@
   <main class="page-shell">
     <section class="workspace">
       <section class="recorder-panel">
-        <div class="section-heading">
-          <div>
-            <span class="section-kicker">RECORDER</span>
-            <h2>开始新录音</h2>
-          </div>
-          <span class="privacy-label">音频仅保存在本机</span>
-        </div>
 
         <div class="recording-console idle" id="recorder-status" aria-live="polite">
           <div class="recording-orbit">
@@ -52,15 +45,32 @@
         </div>
 
         <div class="recorder-fields">
-          <label>
+          <div class="recorder-field">
             <span>录音设备</span>
             <div class="device-row">
               <select id="recorder-device" aria-label="录音麦克风">
                 <option value="">正在读取麦克风…</option>
               </select>
+              <button class="device-settings-button" id="recorder-settings-toggle" type="button"
+                aria-label="录音设备设置" aria-expanded="false" aria-controls="recorder-settings-panel"
+                title="录音设备设置">
+                <span aria-hidden="true">⚙</span>
+              </button>
               <button class="secondary-button" id="refresh-devices" type="button">刷新</button>
             </div>
-          </label>
+            <div class="device-settings-panel" id="recorder-settings-panel" hidden>
+              <div class="gain-heading">
+                <span>录音增益</span>
+                <output id="recorder-gain-value" for="recorder-gain">0 dB</output>
+              </div>
+              <input id="recorder-gain" type="range" min="0" max="24" step="1" value="0"
+                aria-label="录音增益，单位分贝">
+              <div class="gain-scale" aria-hidden="true">
+                <span>原始</span>
+                <span>更响</span>
+              </div>
+            </div>
+          </div>
           <label>
             <span>这段录音的标题 <small>选填</small></span>
             <input id="recorder-title" type="text" maxlength="200" placeholder="未填写时使用开始录音时间">

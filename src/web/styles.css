@@ -229,18 +229,10 @@ audio:focus-visible {
   font: 500 28px/1.15 Georgia, "Noto Serif SC", serif;
 }
 
-.privacy-label {
-  padding: 8px 10px;
-  border-radius: 9px;
-  color: var(--green);
-  font-size: 10px;
-  font-weight: 750;
-  white-space: nowrap;
-}
 
 .recording-console {
   min-height: 240px;
-  margin: 27px 0 25px;
+  margin: 0 0 25px;
   display: grid;
   place-items: center;
   align-content: center;
@@ -341,12 +333,18 @@ audio:focus-visible {
   gap: 17px;
 }
 
-.recorder-fields label {
+.recorder-fields label,
+.recorder-field {
   display: grid;
   gap: 9px;
 }
 
-.recorder-fields label > span {
+.recorder-field {
+  position: relative;
+}
+
+.recorder-fields label > span,
+.recorder-field > span {
   color: #465154;
   font-size: 12px;
   font-weight: 750;
@@ -390,8 +388,82 @@ audio:focus-visible {
 
 .device-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 47px auto;
   gap: 8px;
+}
+
+.device-settings-button {
+  width: 47px;
+  height: 47px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.device-settings-button:hover,
+.device-settings-button[aria-expanded="true"] {
+  border-color: rgba(35, 98, 199, 0.35);
+  color: var(--blue);
+  background: white;
+}
+
+.device-settings-panel {
+  position: absolute;
+  z-index: 20;
+  top: 79px;
+  right: 74px;
+  width: min(280px, calc(100% - 74px));
+  padding: 15px 16px 12px;
+  display: grid;
+  gap: 9px;
+  border: 1px solid rgba(23, 32, 36, 0.13);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 15px 38px rgba(23, 32, 36, 0.15);
+}
+
+.device-settings-panel[hidden] {
+  display: none;
+}
+
+.gain-heading,
+.gain-scale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gain-heading {
+  color: #465154;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.gain-heading output {
+  color: var(--blue);
+  font: 750 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.device-settings-panel input[type="range"],
+.device-settings-panel input[type="range"]:focus {
+  width: 100%;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  accent-color: var(--blue);
+}
+
+.gain-scale {
+  color: #9aa3a5;
+  font-size: 9px;
 }
 
 .secondary-button {
@@ -444,6 +516,7 @@ audio:focus-visible {
 }
 
 .record-toggle-button:disabled,
+.device-settings-button:disabled,
 .secondary-button:disabled,
 .refresh-button:disabled {
   cursor: wait;

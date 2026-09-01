@@ -225,7 +225,8 @@ async function handleApi(context, request, response, requestUrl) {
     const input = await readJson(request);
     const recorderStatus = await recorder.start({
       deviceName: input.deviceName,
-      title: String(input.title ?? "").slice(0, 200)
+      title: String(input.title ?? "").slice(0, 200),
+      gainDb: input.gainDb
     });
     sendJson(response, 202, recorderStatus);
     return;

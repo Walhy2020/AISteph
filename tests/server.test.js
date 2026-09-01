@@ -32,7 +32,7 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.4.1且页面使用紧凑单按钮录音工作台", async (t) => {
+test("管理台显示v0.4.2且提供紧凑录音增益设置", async (t) => {
   const { origin } = await createTestServer(t);
   const [response, stylesResponse] = await Promise.all([
     fetch(origin),
@@ -45,12 +45,18 @@ test("管理台显示v0.4.1且页面使用紧凑单按钮录音工作台", async
 
   assert.equal(response.status, 200);
   assert.equal(stylesResponse.status, 200);
-  assert.match(html, /AISteph v0\.4\.1/);
+  assert.match(html, /AISteph v0\.4\.2/);
   assert.match(html, /type="module"/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
   assert.match(html, /<audio controls preload="metadata"><\/audio>/);
   assert.match(html, /id="recording-toggle"/);
+  assert.match(html, /id="recorder-settings-toggle"/);
+  assert.match(html, /id="recorder-settings-panel"/);
+  assert.match(html, /id="recorder-gain"/);
+  assert.doesNotMatch(html, /section-kicker">RECORDER/);
+  assert.doesNotMatch(html, /开始新录音/);
+  assert.doesNotMatch(html, /音频仅保存在本机/);
   assert.doesNotMatch(html, /class="hero"/);
   assert.doesNotMatch(html, /id="start-recording"/);
   assert.doesNotMatch(html, /id="stop-recording"/);
@@ -84,7 +90,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.4.1");
+  assert.equal((await status.json()).version, "0.4.2");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
@@ -182,6 +188,7 @@ test("录音API枚举设备、启动、查询状态并在停止后返回统一�
         sessionId: "REC-TEST",
         deviceName: input.deviceName,
         title: input.title,
+        gainDb: input.gainDb,
         startedAt: new Date().toISOString(),
         elapsedSeconds: 0,
         lastError: null
@@ -213,7 +220,7 @@ test("录音API枚举设备、启动、查询状态并在停止后返回统一�
   const startResponse = await fetch(`${origin}/api/recorder/start`, {
     method: "POST",
     headers: tokenHeaders(app, origin, { "Content-Type": "application/json" }),
-    body: JSON.stringify({ deviceName: "API Test Microphone", title: "API录音" })
+    body: JSON.stringify({ deviceName: "API Test Microphone", title: "API录音", gainDb: 9 })
   });
   assert.equal(startResponse.status, 202);
   assert.equal((await startResponse.json()).state, "recording");
@@ -233,6 +240,6 @@ test("录音API枚举设备、启动、查询状态并在停止后返回统一�
   assert.equal(record.status, "pending_review");
   assert.deepEqual(calls.find((item) => Array.isArray(item)), [
     "start",
-    { deviceName: "API Test Microphone", title: "API录音" }
+    { deviceName: "API Test Microphone", title: "API录音", gainDb: 9 }
   ]);
 });

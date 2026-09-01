@@ -9,6 +9,10 @@ const elements = {
   recorderDeviceLabel: document.querySelector("#recorder-device-label"),
   recorderDevice: document.querySelector("#recorder-device"),
   recorderTitle: document.querySelector("#recorder-title"),
+  recorderSettingsToggle: document.querySelector("#recorder-settings-toggle"),
+  recorderSettingsPanel: document.querySelector("#recorder-settings-panel"),
+  recorderGain: document.querySelector("#recorder-gain"),
+  recorderGainValue: document.querySelector("#recorder-gain-value"),
   refreshDevices: document.querySelector("#refresh-devices"),
   recordingToggle: document.querySelector("#recording-toggle"),
   recordingToggleLabel: document.querySelector(".record-toggle-label"),
@@ -21,6 +25,37 @@ const elements = {
 let currentRecorderStatus = { state: "idle", lastError: null };
 let recorderRequestActive = false;
 let recorderStatusRefreshing = false;
+const RECORDER_GAIN_STORAGE_KEY = "aisteph.recorder.gainDb";
+
+function normalizeGainDb(value) {
+  const gainDb = Number(value);
+  if (!Number.isFinite(gainDb)) return 0;
+  return Math.min(24, Math.max(0, Math.round(gainDb)));
+}
+
+function updateGainSetting(value, persist = true) {
+  const gainDb = normalizeGainDb(value);
+  elements.recorderGain.value = String(gainDb);
+  elements.recorderGainValue.textContent = gainDb ? "+" + gainDb + " dB" : "0 dB";
+  if (persist) {
+    try {
+      localStorage.setItem(RECORDER_GAIN_STORAGE_KEY, String(gainDb));
+    } catch {
+      // 本地存储不可用时，本次页面内的设置仍然有效。
+    }
+  }
+}
+
+function setSettingsPanel(open) {
+  elements.recorderSettingsPanel.hidden = !open;
+  elements.recorderSettingsToggle.setAttribute("aria-expanded", String(open));
+}
+
+try {
+  updateGainSetting(localStorage.getItem(RECORDER_GAIN_STORAGE_KEY), false);
+} catch {
+  updateGainSetting(0, false);
+}
 
 async function api(requestPath, options = {}) {
   const response = await fetch(requestPath, {
@@ -105,7 +140,10 @@ function renderRecorderStatus(status = currentRecorderStatus) {
 
   elements.recorderDevice.disabled = active || recorderRequestActive;
   elements.recorderTitle.disabled = active || recorderRequestActive;
+  elements.recorderSettingsToggle.disabled = active || recorderRequestActive;
+  elements.recorderGain.disabled = active || recorderRequestActive;
   elements.refreshDevices.disabled = active || recorderRequestActive;
+  if (active) setSettingsPanel(false);
   elements.recordingToggle.classList.toggle("is-recording", active);
   elements.recordingToggleLabel.textContent = active ? "停止并保存" : "开始录音";
   elements.recordingToggle.disabled = recorderRequestActive
@@ -257,6 +295,20 @@ async function refreshDashboard() {
 elements.refreshDevices.addEventListener("click", loadRecorderDevices);
 elements.recorderDevice.addEventListener("change", () => renderRecorderStatus());
 elements.refreshRecordings.addEventListener("click", refreshDashboard);
+elements.recorderSettingsToggle.addEventListener("click", () => {
+  setSettingsPanel(elements.recorderSettingsPanel.hidden);
+});
+elements.recorderGain.addEventListener("input", () => {
+  updateGainSetting(elements.recorderGain.value);
+});
+document.addEventListener("click", (event) => {
+  if (elements.recorderSettingsPanel.hidden) return;
+  if (event.target instanceof Element && event.target.closest(".recorder-field")) return;
+  setSettingsPanel(false);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setSettingsPanel(false);
+});
 
 async function startRecording() {
   if (!elements.recorderDevice.value) {
@@ -272,7 +324,8 @@ async function startRecording() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         deviceName: elements.recorderDevice.value,
-        title: elements.recorderTitle.value
+        title: elements.recorderTitle.value,
+        gainDb: Number(elements.recorderGain.value)
       })
     });
     renderRecorderStatus(status);
