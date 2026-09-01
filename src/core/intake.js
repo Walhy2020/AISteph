@@ -249,7 +249,7 @@ export async function addAudio(config, log, {
   const record = createBaseRecord(
     config,
     "audio",
-    normalizeTitle(title, `录音 ${started.toLocaleString("zh-CN", { hour12: false })}`),
+    normalizeTitle(title, started.toLocaleString("zh-CN", { hour12: false })),
     hash,
     null,
     relativeFromWorkspace(config, absoluteInput)

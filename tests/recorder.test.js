@@ -150,9 +150,11 @@ test("服务退出时主动停止录音并完成入库", async (t) => {
   const context = await createTestContext();
   t.after(() => rm(context.workspaceRoot, { recursive: true, force: true }));
   const harness = createSpawnHarness();
+  const clickedAt = new Date("2026-09-01T09:08:55.000Z");
   const recorder = createRecorder(context.config, context.log, {
     spawnImpl: harness.spawnImpl,
     startTimeoutMs: 1,
+    now: () => clickedAt,
     probeAudio: async () => ({ codecName: "opus", durationSeconds: 1.25 })
   });
 
@@ -160,5 +162,10 @@ test("服务退出时主动停止录音并完成入库", async (t) => {
   await recorder.shutdown();
 
   assert.equal(recorder.status().state, "idle");
-  assert.equal((await readdir(path.join(context.config.dataRootPath, "records"))).length, 1);
+  const recordNames = await readdir(path.join(context.config.dataRootPath, "records"));
+  assert.equal(recordNames.length, 1);
+  const record = JSON.parse(
+    await readFile(path.join(context.config.dataRootPath, "records", recordNames[0]), "utf8")
+  );
+  assert.equal(record.title, clickedAt.toLocaleString("zh-CN", { hour12: false }));
 });

@@ -2,7 +2,7 @@ import path from "node:path";
 import { readFile } from "node:fs/promises";
 
 export const DEFAULT_CONFIG = Object.freeze({
-  version: "0.4.0",
+  version: "0.4.1",
   dataRoot: "./data",
   vaultRoot: "./vault",
   logsRoot: "./logs",

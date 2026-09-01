@@ -3,9 +3,6 @@ const version = document.querySelector('meta[name="aisteph-version"]').content;
 
 const elements = {
   serviceStatus: document.querySelector("#service-status"),
-  recordingsStat: document.querySelector("#stat-recordings"),
-  durationStat: document.querySelector("#stat-duration"),
-  pendingStat: document.querySelector("#stat-pending"),
   recorderStatus: document.querySelector("#recorder-status"),
   recorderStateLabel: document.querySelector("#recorder-state-label"),
   recorderDuration: document.querySelector("#recorder-duration"),
@@ -13,8 +10,8 @@ const elements = {
   recorderDevice: document.querySelector("#recorder-device"),
   recorderTitle: document.querySelector("#recorder-title"),
   refreshDevices: document.querySelector("#refresh-devices"),
-  startRecording: document.querySelector("#start-recording"),
-  stopRecording: document.querySelector("#stop-recording"),
+  recordingToggle: document.querySelector("#recording-toggle"),
+  recordingToggleLabel: document.querySelector(".record-toggle-label"),
   formMessage: document.querySelector("#form-message"),
   recordingList: document.querySelector("#recording-list"),
   recordingTemplate: document.querySelector("#recording-card-template"),
@@ -63,15 +60,6 @@ function formatDuration(totalSeconds) {
   return parts.join(":");
 }
 
-function formatTotalDuration(totalSeconds) {
-  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  if (seconds < 60) return `${seconds}秒`;
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (!hours) return `${minutes}分`;
-  return `${hours}时${minutes}分`;
-}
-
 function formatTime(value) {
   if (!value) return "时间未知";
   const date = new Date(value);
@@ -118,10 +106,12 @@ function renderRecorderStatus(status = currentRecorderStatus) {
   elements.recorderDevice.disabled = active || recorderRequestActive;
   elements.recorderTitle.disabled = active || recorderRequestActive;
   elements.refreshDevices.disabled = active || recorderRequestActive;
-  elements.startRecording.hidden = active;
-  elements.stopRecording.hidden = !active;
-  elements.startRecording.disabled = recorderRequestActive || !elements.recorderDevice.value;
-  elements.stopRecording.disabled = recorderRequestActive || state === "stopping";
+  elements.recordingToggle.classList.toggle("is-recording", active);
+  elements.recordingToggleLabel.textContent = active ? "停止并保存" : "开始录音";
+  elements.recordingToggle.disabled = recorderRequestActive
+    || state === "starting"
+    || state === "stopping"
+    || (!active && !elements.recorderDevice.value);
 
   if (state === "idle" && status.lastError) {
     elements.recorderStatus.classList.add("error");
@@ -159,9 +149,6 @@ function renderRecordings(items) {
     card.querySelector("h3").textContent = item.title || "未命名录音";
     card.querySelector(".captured-time").textContent = formatTime(item.capturedAt);
     card.querySelector(".duration-label").textContent = `时长 ${formatDuration(item.durationSeconds)}`;
-    card.querySelector(".device-label").textContent = item.deviceName || "设备未知";
-    card.querySelector(".record-id").textContent = item.id;
-    card.querySelector(".source-path").textContent = item.sourcePath || "文件路径未知";
 
     const audio = card.querySelector("audio");
     if (item.audioUrl) {
@@ -173,12 +160,15 @@ function renderRecordings(items) {
       });
       audio.addEventListener("error", () => {
         card.classList.add("playback-error");
-        card.querySelector(".analysis-state").textContent = "播放失败";
+        audio.title = "播放失败";
       });
     } else {
       audio.remove();
       card.classList.add("playback-error");
-      card.querySelector(".analysis-state").textContent = "文件不可用";
+      const unavailable = document.createElement("span");
+      unavailable.className = "playback-unavailable";
+      unavailable.textContent = "录音文件不可用";
+      card.append(unavailable);
     }
     fragment.append(card);
   }
@@ -247,11 +237,7 @@ async function refreshDashboard() {
       api("/api/inbox?type=audio&limit=200")
     ]);
     setServiceStatus(true, `本地服务在线 · v${status.version}`);
-    elements.recordingsStat.textContent = status.stats.audio?.total ?? 0;
-    elements.durationStat.textContent = formatTotalDuration(
-      status.stats.audio?.durationSeconds ?? 0
-    );
-    elements.pendingStat.textContent = status.stats.audio?.pendingReview ?? 0;
+
     renderRecordings(inbox.items);
   } catch (error) {
     setServiceStatus(false, "本地服务异常");
@@ -272,7 +258,7 @@ elements.refreshDevices.addEventListener("click", loadRecorderDevices);
 elements.recorderDevice.addEventListener("change", () => renderRecorderStatus());
 elements.refreshRecordings.addEventListener("click", refreshDashboard);
 
-elements.startRecording.addEventListener("click", async () => {
+async function startRecording() {
   if (!elements.recorderDevice.value) {
     showMessage("请先选择一个可用麦克风。", "error");
     return;
@@ -290,16 +276,16 @@ elements.startRecording.addEventListener("click", async () => {
       })
     });
     renderRecorderStatus(status);
-    showMessage("录音已开始。完成后点击“停止并保存”。", "success");
+    showMessage("录音已开始，再次点击按钮即可停止并保存。", "success");
   } catch (error) {
     showMessage(error.message, "error");
   } finally {
     recorderRequestActive = false;
     await refreshRecorderStatus();
   }
-});
+}
 
-elements.stopRecording.addEventListener("click", async () => {
+async function stopRecording() {
   recorderRequestActive = true;
   renderRecorderStatus({ ...currentRecorderStatus, state: "stopping" });
   showMessage("正在停止、封装并校验录音…");
@@ -317,8 +303,15 @@ elements.stopRecording.addEventListener("click", async () => {
     recorderRequestActive = false;
     await refreshRecorderStatus();
   }
-});
+}
 
+elements.recordingToggle.addEventListener("click", async () => {
+  if (currentRecorderStatus.state === "recording") {
+    await stopRecording();
+    return;
+  }
+  await startRecording();
+});
 document.title = `AISteph v${version} · 录音工作台`;
 await Promise.all([
   refreshDashboard(),

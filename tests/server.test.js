@@ -32,17 +32,32 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.4.0且页面只展示录音工作台", async (t) => {
+test("管理台显示v0.4.1且页面使用紧凑单按钮录音工作台", async (t) => {
   const { origin } = await createTestServer(t);
-  const response = await fetch(origin);
-  const html = await response.text();
+  const [response, stylesResponse] = await Promise.all([
+    fetch(origin),
+    fetch(`${origin}/assets/styles.css`)
+  ]);
+  const [html, styles] = await Promise.all([
+    response.text(),
+    stylesResponse.text()
+  ]);
 
   assert.equal(response.status, 200);
-  assert.match(html, /AISteph v0\.4\.0/);
+  assert.equal(stylesResponse.status, 200);
+  assert.match(html, /AISteph v0\.4\.1/);
   assert.match(html, /type="module"/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
   assert.match(html, /<audio controls preload="metadata"><\/audio>/);
+  assert.match(html, /id="recording-toggle"/);
+  assert.doesNotMatch(html, /class="hero"/);
+  assert.doesNotMatch(html, /id="start-recording"/);
+  assert.doesNotMatch(html, /id="stop-recording"/);
+  assert.doesNotMatch(html, /class="record-id"/);
+  assert.doesNotMatch(html, /class="source-path"/);
+  assert.match(styles, /height: calc\(100vh - 245px\)/);
+  assert.match(styles, /padding: 11px 13px 12px/);
   assert.doesNotMatch(html, /id="text-form"/);
   assert.doesNotMatch(html, /id="link-form"/);
   assert.doesNotMatch(html, /id="file-form"/);
@@ -69,7 +84,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.4.0");
+  assert.equal((await status.json()).version, "0.4.1");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
