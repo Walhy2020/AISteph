@@ -1,7 +1,7 @@
 import path from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { copyFile, mkdir, rename, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 
 function dayStamp(date) {
   return date.toISOString().slice(0, 10);
@@ -44,6 +44,15 @@ function relativeFromWorkspace(config, absolutePath) {
 }
 
 function buildInboxNote(record, content) {
+  const audioMetadata = record.type === "audio"
+    ? [
+        `started_at: ${yamlString(record.startedAt)}`,
+        `ended_at: ${yamlString(record.endedAt)}`,
+        `duration_seconds: ${record.durationSeconds}`,
+        `device_name: ${yamlString(record.deviceName)}`,
+        `session_id: ${yamlString(record.sessionId)}`
+      ]
+    : [];
   const lines = [
     "---",
     `id: ${yamlString(record.id)}`,
@@ -56,6 +65,7 @@ function buildInboxNote(record, content) {
     `source_url: ${yamlString(record.sourceUrl)}`,
     `source_path: ${yamlString(record.sourcePath)}`,
     `schema_version: ${yamlString(record.schemaVersion)}`,
+    ...audioMetadata,
     "tags: []",
     "projects: []",
     "people: []",
@@ -90,21 +100,31 @@ async function persistRecord(config, log, record, noteContent) {
   const notePath = path.join(config.vaultRootPath, "00_Inbox", "Review", `${record.id}.md`);
   record.inboxNotePath = relativeFromWorkspace(config, notePath);
 
-  await atomicJson(recordPath, record);
-  await atomicJson(queuePath, {
-    sourceId: record.id,
-    stage: "captured",
-    attempts: 0,
-    createdAt: record.capturedAt,
-    updatedAt: record.capturedAt
-  });
-  await mkdir(path.dirname(notePath), { recursive: true });
-  await writeFile(notePath, buildInboxNote(record, noteContent), "utf8");
+  try {
+    await atomicJson(recordPath, record);
+    await atomicJson(queuePath, {
+      sourceId: record.id,
+      stage: "captured",
+      attempts: 0,
+      createdAt: record.capturedAt,
+      updatedAt: record.capturedAt
+    });
+    await mkdir(path.dirname(notePath), { recursive: true });
+    await writeFile(notePath, buildInboxNote(record, noteContent), "utf8");
+  } catch (error) {
+    await Promise.allSettled([
+      rm(recordPath, { force: true }),
+      rm(queuePath, { force: true }),
+      rm(notePath, { force: true })
+    ]);
+    throw error;
+  }
+
   await log("info", "intake.created", {
     sourceId: record.id,
     sourceType: record.type,
     status: record.status
-  });
+  }).catch(() => {});
   return record;
 }
 
@@ -191,4 +211,58 @@ export async function importFile(config, log, { title, inputPath, originalName: 
   await copyFile(absoluteInput, destination);
   record.sourcePath = relativeFromWorkspace(config, destination);
   return persistRecord(config, log, record, null);
+}
+
+export async function addAudio(config, log, {
+  title,
+  inputPath,
+  startedAt,
+  endedAt,
+  durationSeconds,
+  deviceName,
+  sessionId
+}) {
+  const absoluteInput = path.resolve(String(inputPath ?? ""));
+  const audioRoot = path.resolve(config.dataRootPath, "audio");
+  if (!absoluteInput.startsWith(`${audioRoot}${path.sep}`)) {
+    throw new Error("录音文件必须位于配置的数据音频目录中");
+  }
+  const inputInfo = await stat(absoluteInput);
+  if (!inputInfo.isFile() || inputInfo.size === 0) {
+    throw new Error("录音文件必须是非空普通文件");
+  }
+  const started = new Date(startedAt);
+  const ended = new Date(endedAt);
+  const normalizedDuration = Number(durationSeconds);
+  const normalizedDevice = String(deviceName ?? "").trim();
+  if (Number.isNaN(started.getTime()) || Number.isNaN(ended.getTime()) || ended < started) {
+    throw new Error("录音起止时间无效");
+  }
+  if (!Number.isFinite(normalizedDuration) || normalizedDuration <= 0) {
+    throw new Error("录音时长无效");
+  }
+  if (!normalizedDevice || normalizedDevice.length > 300) {
+    throw new Error("录音设备名称无效");
+  }
+
+  const hash = await sha256File(absoluteInput);
+  const record = createBaseRecord(
+    config,
+    "audio",
+    normalizeTitle(title, `录音 ${started.toLocaleString("zh-CN", { hour12: false })}`),
+    hash,
+    null,
+    relativeFromWorkspace(config, absoluteInput)
+  );
+  record.startedAt = started.toISOString();
+  record.endedAt = ended.toISOString();
+  record.durationSeconds = Math.round(normalizedDuration * 1000) / 1000;
+  record.deviceName = normalizedDevice;
+  record.sessionId = String(sessionId ?? "");
+  return persistRecord(
+    config,
+    log,
+    record,
+    `- 录音设备：${record.deviceName}\n- 录音时长：${record.durationSeconds} 秒\n- 音频文件：${record.sourcePath}`
+  );
 }

@@ -12,14 +12,28 @@ const elements = {
   refresh: document.querySelector("#refresh-button"),
   formMessage: document.querySelector("#form-message"),
   fileInput: document.querySelector("#file-input"),
-  fileName: document.querySelector("#file-name")
+  fileName: document.querySelector("#file-name"),
+  recorderDevice: document.querySelector("#recorder-device"),
+  refreshDevices: document.querySelector("#refresh-devices"),
+  recorderTitle: document.querySelector("#recorder-title"),
+  recorderStatus: document.querySelector("#recorder-status"),
+  recorderStateLabel: document.querySelector("#recorder-state-label"),
+  recorderDeviceLabel: document.querySelector("#recorder-device-label"),
+  recorderDuration: document.querySelector("#recorder-duration"),
+  startRecording: document.querySelector("#start-recording"),
+  stopRecording: document.querySelector("#stop-recording")
 };
 
 const typeInfo = {
   text: { label: "文字记录", glyph: "字", className: "" },
   article_link: { label: "文章链接", glyph: "链", className: "article" },
-  document: { label: "本地文件", glyph: "档", className: "document" }
+  document: { label: "本地文件", glyph: "档", className: "document" },
+  audio: { label: "录音", glyph: "声", className: "audio" }
 };
+
+let devicesLoaded = false;
+let recorderRequestActive = false;
+let recorderStatusRefreshing = false;
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -30,6 +44,10 @@ async function api(path, options = {}) {
     }
   });
   const payload = await response.json().catch(() => ({ error: "响应格式无效" }));
+  if (response.status === 403) {
+    window.location.reload();
+    throw new Error("本地服务已重启，正在刷新访问令牌");
+  }
   if (!response.ok) throw new Error(payload.error || `请求失败（${response.status}）`);
   return payload;
 }
@@ -67,7 +85,7 @@ function renderEmpty(message = "还没有待审核资料") {
   const title = document.createElement("strong");
   title.textContent = message;
   const description = document.createElement("p");
-  description.textContent = "从左侧收录一段文字、一个文章链接或本地文件，它会出现在这里。";
+  description.textContent = "从左侧收录文字、文章、文件或一段录音，它会出现在这里。";
   container.append(title, description);
   elements.inbox.replaceChildren(container);
 }
@@ -168,6 +186,99 @@ async function submitForm(form, action) {
   }
 }
 
+function formatDuration(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+  const parts = [minutes, remainder].map((part) => String(part).padStart(2, "0"));
+  if (hours > 0) parts.unshift(String(hours).padStart(2, "0"));
+  return parts.join(":");
+}
+
+function renderRecorderStatus(status) {
+  const state = status.state || "idle";
+  const active = ["starting", "recording", "stopping"].includes(state);
+  const stateLabels = {
+    idle: "准备录音",
+    starting: "正在启动麦克风",
+    recording: "正在录音",
+    stopping: "正在保存录音"
+  };
+  elements.recorderStatus.className = `recorder-status ${state}`;
+  elements.recorderStateLabel.textContent = stateLabels[state] || "录音状态未知";
+  elements.recorderDeviceLabel.textContent = status.deviceName
+    || status.lastError
+    || elements.recorderDevice.selectedOptions[0]?.textContent
+    || "请选择麦克风";
+  elements.recorderDuration.textContent = formatDuration(status.elapsedSeconds);
+  elements.recorderDevice.disabled = active || recorderRequestActive;
+  elements.recorderTitle.disabled = active || recorderRequestActive;
+  elements.refreshDevices.disabled = active || recorderRequestActive;
+  elements.startRecording.hidden = active;
+  elements.stopRecording.hidden = !active;
+  elements.startRecording.disabled = recorderRequestActive || !elements.recorderDevice.value;
+  elements.stopRecording.disabled = recorderRequestActive || state === "stopping";
+  if (state === "idle" && status.lastError) {
+    elements.recorderStatus.classList.add("error");
+    elements.recorderStateLabel.textContent = "上次录音失败";
+  }
+}
+
+async function loadRecorderDevices() {
+  const previous = elements.recorderDevice.value;
+  elements.refreshDevices.disabled = true;
+  elements.recorderDevice.disabled = true;
+  try {
+    const payload = await api("/api/recorder/devices");
+    const fragment = document.createDocumentFragment();
+    for (const device of payload.devices) {
+      const option = document.createElement("option");
+      option.value = device.name;
+      option.textContent = device.name;
+      fragment.append(option);
+    }
+    if (!payload.devices.length) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "未检测到可用麦克风";
+      fragment.append(option);
+    }
+    elements.recorderDevice.replaceChildren(fragment);
+    if (payload.devices.some((device) => device.name === previous)) {
+      elements.recorderDevice.value = previous;
+    }
+    devicesLoaded = true;
+    showMessage(
+      payload.devices.length ? `已检测到 ${payload.devices.length} 个麦克风。` : "未检测到麦克风，请检查连接。",
+      payload.devices.length ? "" : "error"
+    );
+  } catch (error) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "麦克风读取失败";
+    elements.recorderDevice.replaceChildren(option);
+    showMessage(error.message, "error");
+  } finally {
+    elements.refreshDevices.disabled = false;
+    elements.recorderDevice.disabled = false;
+    renderRecorderStatus({ state: "idle", lastError: null });
+  }
+}
+
+async function refreshRecorderStatus() {
+  if (recorderStatusRefreshing) return;
+  recorderStatusRefreshing = true;
+  try {
+    renderRecorderStatus(await api("/api/recorder/status"));
+  } catch (error) {
+    elements.recorderStatus.className = "recorder-status error";
+    elements.recorderStateLabel.textContent = "录音服务不可用";
+    elements.recorderDeviceLabel.textContent = error.message;
+  } finally {
+    recorderStatusRefreshing = false;
+  }
+}
 document.querySelectorAll(".capture-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     const activeName = tab.dataset.tab;
@@ -182,6 +293,10 @@ document.querySelectorAll(".capture-tab").forEach((tab) => {
       panel.classList.toggle("active", active);
     });
     showMessage("");
+    if (activeName === "audio") {
+      if (!devicesLoaded) loadRecorderDevices();
+      refreshRecorderStatus();
+    }
   });
 });
 
@@ -239,6 +354,57 @@ document.querySelector("#file-form").addEventListener("submit", (event) => {
   });
 });
 
+elements.refreshDevices.addEventListener("click", loadRecorderDevices);
+elements.recorderDevice.addEventListener("change", () => {
+  renderRecorderStatus({ state: "idle", lastError: null });
+});
+
+elements.startRecording.addEventListener("click", async () => {
+  if (!elements.recorderDevice.value) {
+    showMessage("请先选择一个可用麦克风。", "error");
+    return;
+  }
+  recorderRequestActive = true;
+  elements.startRecording.disabled = true;
+  showMessage("正在启动麦克风，请稍候…");
+  try {
+    const status = await api("/api/recorder/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deviceName: elements.recorderDevice.value,
+        title: elements.recorderTitle.value
+      })
+    });
+    renderRecorderStatus(status);
+    showMessage("录音已开始。停止后会自动进入统一收件箱。", "success");
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    recorderRequestActive = false;
+    await refreshRecorderStatus();
+  }
+});
+
+elements.stopRecording.addEventListener("click", async () => {
+  recorderRequestActive = true;
+  elements.stopRecording.disabled = true;
+  showMessage("正在停止并校验录音…");
+  try {
+    const payload = await api("/api/recorder/stop", { method: "POST" });
+    showMessage(
+      `已收录 ${payload.record.id}（${formatDuration(payload.record.durationSeconds)}），等待你在 Obsidian 中审核。`,
+      "success"
+    );
+    elements.recorderTitle.value = "";
+    await Promise.all([refreshRecorderStatus(), refreshDashboard()]);
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    recorderRequestActive = false;
+    await refreshRecorderStatus();
+  }
+});
 elements.fileInput.addEventListener("change", () => {
   const file = elements.fileInput.files[0];
   elements.fileName.textContent = file
@@ -250,5 +416,8 @@ elements.filter.addEventListener("change", refreshDashboard);
 elements.refresh.addEventListener("click", refreshDashboard);
 
 document.title = `AISteph v${version} · 个人信息收件箱`;
-await refreshDashboard();
+await Promise.all([refreshDashboard(), refreshRecorderStatus()]);
 setInterval(refreshDashboard, 30000);
+setInterval(() => {
+  if (!document.querySelector("#audio-form").hidden) refreshRecorderStatus();
+}, 1000);

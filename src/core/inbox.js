@@ -21,7 +21,12 @@ function publicRecord(record) {
     sourceUrl: record.sourceUrl,
     sourcePath: record.sourcePath,
     inboxNotePath: record.inboxNotePath,
-    schemaVersion: record.schemaVersion
+    schemaVersion: record.schemaVersion,
+    startedAt: record.startedAt ?? null,
+    endedAt: record.endedAt ?? null,
+    durationSeconds: record.durationSeconds ?? null,
+    deviceName: record.deviceName ?? null,
+    sessionId: record.sessionId ?? null
   };
 }
 

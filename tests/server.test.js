@@ -5,7 +5,7 @@ import os from "node:os";
 import test from "node:test";
 import { createAIStephServer } from "../src/server.js";
 
-async function createTestServer(t, customConfig = {}) {
+async function createTestServer(t, customConfig = {}, serverOptions = {}) {
   const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "aisteph-server-test-"));
   if (Object.keys(customConfig).length) {
     await mkdir(path.join(workspaceRoot, "config"));
@@ -15,7 +15,7 @@ async function createTestServer(t, customConfig = {}) {
       "utf8"
     );
   }
-  const app = await createAIStephServer({ workspaceRoot, port: 0 });
+  const app = await createAIStephServer({ workspaceRoot, port: 0, ...serverOptions });
   const origin = await app.start();
   t.after(async () => {
     await app.close();
@@ -32,14 +32,16 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.2.0并设置浏览器安全响应头", async (t) => {
+test("管理台显示v0.3.0并设置浏览器安全响应头", async (t) => {
   const { origin } = await createTestServer(t);
   const response = await fetch(origin);
   const html = await response.text();
 
   assert.equal(response.status, 200);
-  assert.match(html, /AISteph v0\.2\.0/);
+  assert.match(html, /AISteph v0\.3\.0/);
   assert.match(html, /type="module"/);
+  assert.match(html, /id="audio-form"/);
+  assert.match(html, /data-tab="audio"/);
   assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
 });
@@ -62,7 +64,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.2.0");
+  assert.equal((await status.json()).version, "0.3.0");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
@@ -140,4 +142,77 @@ test("服务拒绝绑定到非本机地址", async (t) => {
     host: "0.0.0.0"
   });
   await assert.rejects(() => app.start(), /只允许绑定127\.0\.0\.1/);
+});
+test("录音API枚举设备、启动、查询状态并在停止后返回统一记录", async (t) => {
+  const calls = [];
+  let state = { state: "idle", lastError: null };
+  const recorder = {
+    async listDevices() {
+      calls.push("devices");
+      return [{ name: "API Test Microphone" }];
+    },
+    status() {
+      calls.push("status");
+      return state;
+    },
+    async start(input) {
+      calls.push(["start", input]);
+      state = {
+        state: "recording",
+        sessionId: "REC-TEST",
+        deviceName: input.deviceName,
+        title: input.title,
+        startedAt: new Date().toISOString(),
+        elapsedSeconds: 0,
+        lastError: null
+      };
+      return state;
+    },
+    async stop() {
+      calls.push("stop");
+      state = { state: "idle", lastError: null };
+      return {
+        id: "SRC-AUDIO-TEST",
+        type: "audio",
+        status: "pending_review",
+        durationSeconds: 3.5
+      };
+    },
+    async shutdown() {
+      calls.push("shutdown");
+    }
+  };
+  const { app, origin } = await createTestServer(t, {}, { recorder });
+
+  const devicesResponse = await fetch(`${origin}/api/recorder/devices`, {
+    headers: tokenHeaders(app, origin)
+  });
+  assert.equal(devicesResponse.status, 200);
+  assert.deepEqual((await devicesResponse.json()).devices, [{ name: "API Test Microphone" }]);
+
+  const startResponse = await fetch(`${origin}/api/recorder/start`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin, { "Content-Type": "application/json" }),
+    body: JSON.stringify({ deviceName: "API Test Microphone", title: "API录音" })
+  });
+  assert.equal(startResponse.status, 202);
+  assert.equal((await startResponse.json()).state, "recording");
+
+  const statusResponse = await fetch(`${origin}/api/recorder/status`, {
+    headers: tokenHeaders(app, origin)
+  });
+  assert.equal((await statusResponse.json()).sessionId, "REC-TEST");
+
+  const stopResponse = await fetch(`${origin}/api/recorder/stop`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin)
+  });
+  assert.equal(stopResponse.status, 201);
+  const record = (await stopResponse.json()).record;
+  assert.equal(record.type, "audio");
+  assert.equal(record.status, "pending_review");
+  assert.deepEqual(calls.find((item) => Array.isArray(item)), [
+    "start",
+    { deviceName: "API Test Microphone", title: "API录音" }
+  ]);
 });

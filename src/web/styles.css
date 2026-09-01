@@ -313,7 +313,7 @@ input[type="file"] {
   margin: 29px 0 25px;
   padding: 4px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border: 1px solid var(--line);
   border-radius: 13px;
   background: rgba(23, 32, 36, 0.035);
@@ -487,6 +487,145 @@ input[type="file"] {
   color: var(--muted);
 }
 
+.recorder-form select {
+  width: 100%;
+  height: 47px;
+  padding: 0 38px 0 14px;
+  border: 1px solid rgba(23, 32, 36, 0.14);
+  border-radius: 11px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  outline: none;
+}
+
+.recorder-form select:focus {
+  border-color: rgba(36, 102, 209, 0.62);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(36, 102, 209, 0.08);
+}
+
+.recorder-device-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.secondary-button {
+  min-width: 64px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--blue);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.secondary-button:hover {
+  border-color: rgba(36, 102, 209, 0.35);
+  background: white;
+}
+
+.recorder-status {
+  min-height: 78px;
+  padding: 15px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.recorder-status > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.recorder-status strong {
+  font-size: 13px;
+}
+
+.recorder-status small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recorder-status time {
+  color: var(--muted);
+  font: 700 19px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.recorder-indicator {
+  width: 13px;
+  height: 13px;
+  border: 3px solid rgba(104, 116, 119, 0.2);
+  border-radius: 50%;
+  background: #aeb7b8;
+}
+
+.recorder-status.recording {
+  border-color: rgba(219, 72, 63, 0.22);
+  background: rgba(219, 72, 63, 0.045);
+}
+
+.recorder-status.recording .recorder-indicator {
+  border-color: rgba(219, 72, 63, 0.18);
+  background: #db483f;
+  box-shadow: 0 0 0 5px rgba(219, 72, 63, 0.1);
+  animation: recording-pulse 1.35s ease-in-out infinite;
+}
+
+.recorder-status.starting .recorder-indicator,
+.recorder-status.stopping .recorder-indicator {
+  border-color: rgba(36, 102, 209, 0.18);
+  background: var(--blue);
+  animation: recording-pulse 1s ease-in-out infinite;
+}
+
+.recorder-status.error {
+  border-color: rgba(184, 74, 62, 0.25);
+  background: rgba(184, 74, 62, 0.04);
+}
+
+.recorder-status.error .recorder-indicator {
+  background: #b84a3e;
+}
+
+.recorder-actions {
+  display: grid;
+}
+
+.danger-button {
+  height: 50px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  background: #b63f36;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(182, 63, 54, 0.16);
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.danger-button:hover {
+  background: #963129;
+  transform: translateY(-1px);
+}
+
+.danger-button:disabled,
+.secondary-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+  transform: none;
+}
 .form-message {
   min-height: 20px;
   margin-top: 15px;
@@ -587,6 +726,11 @@ input[type="file"] {
 .type-icon.document {
   color: var(--teal);
   background: rgba(14, 139, 120, 0.1);
+}
+
+.type-icon.audio {
+  color: #a73b45;
+  background: rgba(183, 56, 70, 0.1);
 }
 
 .card-main {
@@ -744,6 +888,13 @@ input[type="file"] {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@keyframes recording-pulse {
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
 }
 
 @keyframes shimmer {

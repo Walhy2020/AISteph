@@ -11,6 +11,7 @@ import { createLogger } from "./core/logger.js";
 import { initializeWorkspace } from "./core/workspace.js";
 import { addLink, addText, importFile } from "./core/intake.js";
 import { getInboxStats, listInbox } from "./core/inbox.js";
+import { createRecorder } from "./core/recorder.js";
 import { getVersion } from "./version.js";
 
 const HOST = "127.0.0.1";
@@ -150,7 +151,7 @@ async function serveStatic(pathname, response) {
 }
 
 async function handleApi(context, request, response, requestUrl) {
-  const { config, log, token, startedAt, origin } = context;
+  const { config, log, recorder, token, startedAt, origin } = context;
   requireToken(request, token);
 
   if (request.method === "GET" && requestUrl.pathname === "/api/status") {
@@ -183,10 +184,37 @@ async function handleApi(context, request, response, requestUrl) {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/recorder/devices") {
+    const devices = await recorder.listDevices();
+    sendJson(response, 200, { devices });
+    return;
+  }
+
+  if (request.method === "GET" && requestUrl.pathname === "/api/recorder/status") {
+    sendJson(response, 200, recorder.status());
+    return;
+  }
+
   if (request.method !== "POST") {
     throw new HttpError(405, "请求方法不支持");
   }
   requireSameOrigin(request, origin);
+
+  if (requestUrl.pathname === "/api/recorder/start") {
+    const input = await readJson(request);
+    const recorderStatus = await recorder.start({
+      deviceName: input.deviceName,
+      title: String(input.title ?? "").slice(0, 200)
+    });
+    sendJson(response, 202, recorderStatus);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/recorder/stop") {
+    const record = await recorder.stop();
+    sendJson(response, 201, { record });
+    return;
+  }
 
   if (requestUrl.pathname === "/api/intake/text") {
     const input = await readJson(request);
@@ -240,6 +268,7 @@ export async function createAIStephServer(options = {}) {
   await initializeWorkspace(config);
 
   const log = createLogger(config);
+  const recorder = options.recorder ?? createRecorder(config, log, options.recorderOptions);
   const token = randomBytes(24).toString("base64url");
   const startedAt = new Date().toISOString();
   let origin = null;
@@ -249,7 +278,12 @@ export async function createAIStephServer(options = {}) {
     try {
       const requestUrl = new URL(request.url ?? "/", origin ?? "http://127.0.0.1");
       if (requestUrl.pathname.startsWith("/api/")) {
-        await handleApi({ config, log, token, startedAt, origin }, request, response, requestUrl);
+        await handleApi(
+          { config, log, recorder, token, startedAt, origin },
+          request,
+          response,
+          requestUrl
+        );
       } else if (request.method === "GET" && requestUrl.pathname === "/") {
         await serveIndex(response, version, token);
       } else if (request.method === "GET" && await serveStatic(requestUrl.pathname, response)) {
@@ -291,6 +325,7 @@ export async function createAIStephServer(options = {}) {
     config,
     token,
     server,
+    recorder,
     get origin() {
       return origin;
     },
@@ -317,6 +352,7 @@ export async function createAIStephServer(options = {}) {
       return origin;
     },
     async close() {
+      await recorder.shutdown();
       if (!server.listening) return;
       await new Promise((resolve, reject) => {
         server.close((error) => error ? reject(error) : resolve());

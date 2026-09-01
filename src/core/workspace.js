@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 const DATA_DIRECTORIES = [
   ["records"],
   ["queue"],
+  ["audio"],
   ["sources", "text"],
   ["sources", "articles"],
   ["sources", "documents"]

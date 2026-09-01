@@ -34,7 +34,7 @@
       <div class="hero-copy">
         <span class="eyebrow">LOCAL FIRST · PRIVATE BY DEFAULT</span>
         <h1>把今天遇到的信息，<br><em>放进一个可信收件箱。</em></h1>
-        <p>文字、文章和文件先保留原始来源，再进入 Obsidian 待审核区。AI不会替你把未经确认的内容当成事实。</p>
+        <p>文字、文章、文件和录音先保留原始来源，再进入 Obsidian 待审核区。AI不会替你把未经确认的内容当成事实。</p>
       </div>
       <div class="hero-stats" aria-label="收件箱统计">
         <article>
@@ -69,6 +69,7 @@
           <button class="capture-tab active" data-tab="text" role="tab" aria-selected="true">文字</button>
           <button class="capture-tab" data-tab="link" role="tab" aria-selected="false">文章</button>
           <button class="capture-tab" data-tab="file" role="tab" aria-selected="false">文件</button>
+          <button class="capture-tab" data-tab="audio" role="tab" aria-selected="false">录音</button>
         </div>
 
         <form class="capture-form active" id="text-form" data-panel="text">
@@ -122,6 +123,44 @@
           </button>
         </form>
 
+        <section class="capture-form recorder-form" id="audio-form" data-panel="audio" hidden>
+          <label>
+            <span>麦克风</span>
+            <div class="recorder-device-row">
+              <select id="recorder-device" aria-label="录音麦克风">
+                <option value="">正在读取麦克风…</option>
+              </select>
+              <button class="secondary-button" id="refresh-devices" type="button">刷新</button>
+            </div>
+          </label>
+          <label>
+            <span>录音标题 <small>选填</small></span>
+            <input id="recorder-title" type="text" maxlength="200" placeholder="例如：产品讨论记录">
+          </label>
+          <div class="recorder-status idle" id="recorder-status" aria-live="polite">
+            <span class="recorder-indicator" aria-hidden="true"></span>
+            <div>
+              <strong id="recorder-state-label">准备录音</strong>
+              <small id="recorder-device-label">请选择麦克风</small>
+            </div>
+            <time id="recorder-duration">00:00</time>
+          </div>
+          <div class="recorder-actions">
+            <button class="primary-button" id="start-recording" type="button">
+              <span>开始录音</span>
+              <span aria-hidden="true">●</span>
+            </button>
+            <button class="danger-button" id="stop-recording" type="button" hidden>
+              <span>停止并收录</span>
+              <span aria-hidden="true">■</span>
+            </button>
+          </div>
+          <div class="form-note">
+            <strong>手动事件录音</strong>
+            <span>音频以 Opus 保存在本机；停止后才进入统一收件箱。本版本暂不进行 AI 转写。</span>
+          </div>
+        </section>
+
         <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
       </aside>
 
@@ -139,6 +178,7 @@
                 <option value="text">文字记录</option>
                 <option value="article_link">文章链接</option>
                 <option value="document">本地文件</option>
+                <option value="audio">录音</option>
               </select>
             </label>
             <button class="icon-button" id="refresh-button" type="button" aria-label="刷新收件箱">↻</button>
