@@ -1,0 +1,15 @@
+{
+  "name": "aisteph",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first personal information intake and knowledge organization",
+  "type": "module",
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "node --test",
+    "check": "node --check src/cli.js && node --check src/core/intake.js && node --check src/core/workspace.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,7 @@
+data/
+logs/
+vault/
+config/aisteph.json
+.tmp/
+node_modules/
+*.log

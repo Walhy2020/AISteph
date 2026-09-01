@@ -1,0 +1,8 @@
+{
+  "version": "0.1.0",
+  "dataRoot": "./data",
+  "vaultRoot": "./vault",
+  "logsRoot": "./logs",
+  "defaultVisibility": "private",
+  "rawAudioRetentionHours": 72
+}
