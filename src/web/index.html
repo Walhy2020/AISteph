@@ -9,29 +9,33 @@
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <div class="ambient ambient-blue"></div>
-  <div class="ambient ambient-red"></div>
-
-  <header class="topbar">
+  <header class="topbar global-nav">
     <a class="brand" href="/" aria-label="AISteph 录音工作台首页">
-      <span class="brand-mark">A</span>
-      <span>
-        <strong>AISteph</strong>
-        <small>RECORDING WORKSPACE</small>
-      </span>
+      <span class="brand-mark" aria-hidden="true">A</span>
+      <strong>AISteph</strong>
     </a>
-    <div class="topbar-meta">
+    <span class="nav-context">PRIVATE RECORDING SYSTEM</span>
+  </header>
+
+  <nav class="product-nav" aria-label="录音工作台状态">
+    <strong>录音工作台</strong>
+    <div class="product-nav-meta">
       <span class="service-pill" id="service-status">
         <span class="service-dot"></span>
         <span>正在连接</span>
       </span>
       <span class="version-pill">v__AISTEPH_VERSION__</span>
     </div>
-  </header>
+  </nav>
 
   <main class="page-shell">
     <section class="workspace">
-      <section class="recorder-panel">
+      <section class="recorder-panel product-tile-light">
+        <div class="recorder-heading">
+          <span class="section-kicker">RECORDER</span>
+          <h1>记录此刻。</h1>
+          <p>声音，成为可整理的信息。</p>
+        </div>
 
         <div class="recording-console idle" id="recorder-status" aria-live="polite">
           <div class="recording-orbit">
@@ -46,7 +50,7 @@
 
         <div class="recorder-fields">
           <div class="recorder-field">
-            <span>录音设备</span>
+            <span class="field-label">录音设备</span>
             <div class="device-row">
               <select id="recorder-device" aria-label="录音麦克风">
                 <option value="">正在读取麦克风…</option>
@@ -71,8 +75,9 @@
               </div>
             </div>
           </div>
-          <label>
-            <span>这段录音的标题 <small>选填</small></span>
+
+          <label class="title-field">
+            <span class="field-label">这段录音的标题 <small>选填</small></span>
             <input id="recorder-title" type="text" maxlength="200" placeholder="未填写时使用开始录音时间">
           </label>
         </div>
@@ -92,10 +97,10 @@
         </div>
       </section>
 
-      <section class="library-panel">
+      <section class="library-panel product-tile-dark">
         <div class="section-heading library-heading">
           <div>
-            <span class="section-kicker">RECORDINGS</span>
+            <span class="section-kicker">LIBRARY</span>
             <h2>录音资料库</h2>
           </div>
           <button class="refresh-button" id="refresh-recordings" type="button" aria-label="刷新录音资料库">

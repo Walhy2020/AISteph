@@ -32,7 +32,7 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.4.6并监测录音设备连接状态", async (t) => {
+test("管理台显示v0.5.0并遵循DESIGN设计系统", async (t) => {
   const { origin } = await createTestServer(t);
   const [response, stylesResponse, scriptResponse, deviceScriptResponse] = await Promise.all([
     fetch(origin),
@@ -51,7 +51,7 @@ test("管理台显示v0.4.6并监测录音设备连接状态", async (t) => {
   assert.equal(stylesResponse.status, 200);
   assert.equal(scriptResponse.status, 200);
   assert.equal(deviceScriptResponse.status, 200);
-  assert.match(html, /AISteph v0\.4\.6/);
+  assert.match(html, /AISteph v0\.5\.0/);
   assert.match(html, /type="module"/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
@@ -65,7 +65,13 @@ test("管理台显示v0.4.6并监测录音设备连接状态", async (t) => {
   assert.match(html, /id="recorder-gain"/);
   assert.match(html, /id="recording-waveform"/);
   assert.doesNotMatch(html, /id="recorder-device-label"/);
-  assert.doesNotMatch(html, /section-kicker">RECORDER/);
+  assert.match(html, /class="topbar global-nav"/);
+  assert.match(html, /class="product-nav"/);
+  assert.match(html, /class="recorder-panel product-tile-light"/);
+  assert.match(html, /class="library-panel product-tile-dark"/);
+  assert.match(html, /section-kicker">RECORDER/);
+  assert.match(html, /记录此刻。/);
+  assert.doesNotMatch(html, /class="ambient/);
   assert.doesNotMatch(html, /开始新录音/);
   assert.doesNotMatch(html, /音频仅保存在本机/);
   assert.doesNotMatch(html, /class="hero"/);
@@ -73,8 +79,14 @@ test("管理台显示v0.4.6并监测录音设备连接状态", async (t) => {
   assert.doesNotMatch(html, /id="stop-recording"/);
   assert.doesNotMatch(html, /class="record-id"/);
   assert.doesNotMatch(html, /class="source-path"/);
-  assert.match(styles, /height: calc\(100vh - 245px\)/);
-  assert.match(styles, /padding: 11px 13px 12px/);
+  assert.match(styles, /--primary: #0066cc/);
+  assert.match(styles, /--dark-tile: #272729/);
+  assert.match(styles, /--parchment: #f5f5f7/);
+  assert.match(styles, /grid-template-columns: minmax\(440px/);
+  assert.match(styles, /border-radius: 9999px/);
+  assert.match(styles, /backdrop-filter: saturate\(180%\) blur\(20px\)/);
+  assert.doesNotMatch(styles, /linear-gradient/);
+  assert.doesNotMatch(styles, /box-shadow/);
   assert.match(styles, /\.recording-console\.recording \.recording-waveform/);
   assert.match(script, /WAVEFORM_BAR_COUNT = 43/);
   assert.match(script, /audioLevelDb/);
@@ -112,7 +124,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.4.6");
+  assert.equal((await status.json()).version, "0.5.0");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
