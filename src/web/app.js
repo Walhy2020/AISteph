@@ -150,6 +150,7 @@ function setSettingsPanel(open) {
   elements.appSettingsPanel.hidden = !open;
   elements.appSettingsToggle.setAttribute("aria-expanded", String(open));
   if (open) requestDesktopSettings();
+  else cancelHotkeyCapture();
 }
 
 try {
@@ -160,6 +161,9 @@ try {
 
 const desktopBridge = window.chrome?.webview ?? null;
 let desktopSettingsAvailable = false;
+let hotkeyCaptureActive = false;
+let currentHotkey = "Ctrl + Alt + R";
+let lastDesktopRecorderState = "";
 
 function showSettingsMessage(message, kind = "") {
   elements.desktopSettingsMessage.className = `settings-message ${kind}`.trim();
@@ -168,7 +172,11 @@ function showSettingsMessage(message, kind = "") {
 
 function applyDesktopSettings(settings) {
   desktopSettingsAvailable = Boolean(settings?.isDesktopClient);
-  elements.recordingHotkey.textContent = settings?.hotkey || "Ctrl + Alt + R";
+  currentHotkey = settings?.hotkey || "Ctrl + Alt + R";
+  hotkeyCaptureActive = false;
+  elements.recordingHotkey.classList.remove("capturing");
+  elements.recordingHotkey.textContent = currentHotkey;
+  elements.recordingHotkey.disabled = !desktopSettingsAvailable;
   elements.startWithWindows.checked = Boolean(settings?.startWithWindows);
   elements.startWithWindows.disabled = !desktopSettingsAvailable;
   elements.openRecordingsFolder.disabled = !desktopSettingsAvailable;
@@ -178,6 +186,8 @@ function applyDesktopSettings(settings) {
     showSettingsMessage("开机启动和打开文件夹仅在 AISteph Voice 客户端中可用。");
   } else if (settings?.message) {
     showSettingsMessage(settings.message, settings.messageKind || "success");
+  } else if (settings?.hotkeyRegistered === false) {
+    showSettingsMessage(`${currentHotkey} 已被其他程序占用，请重新设置。`, "warning");
   } else {
     showSettingsMessage("");
   }
@@ -205,11 +215,63 @@ if (desktopBridge) {
       return;
     }
     if (payload?.type === "settings:error") {
+      hotkeyCaptureActive = false;
+      elements.recordingHotkey.classList.remove("capturing");
+      elements.recordingHotkey.textContent = currentHotkey;
+      elements.recordingHotkey.disabled = !desktopSettingsAvailable;
       showSettingsMessage(payload.message || "设置操作失败。", "error");
-      elements.startWithWindows.disabled = false;
+      elements.startWithWindows.disabled = !desktopSettingsAvailable;
       return;
     }
   });
+}
+function cancelHotkeyCapture() {
+  if (!hotkeyCaptureActive) return;
+  hotkeyCaptureActive = false;
+  elements.recordingHotkey.classList.remove("capturing");
+  elements.recordingHotkey.textContent = currentHotkey;
+  elements.recordingHotkey.disabled = !desktopSettingsAvailable;
+  showSettingsMessage("");
+}
+
+function hotkeyKeyLabel(event) {
+  const code = String(event.code || "");
+  if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+  if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+  if (/^Numpad[0-9]$/.test(code)) return code.slice(6);
+  const key = String(event.key || "").toUpperCase();
+  if (/^F(?:[1-9]|1[0-2])$/.test(key)) return key;
+  return null;
+}
+
+function captureHotkey(event) {
+  if (!hotkeyCaptureActive) return false;
+  event.preventDefault();
+  event.stopPropagation();
+  if (event.key === "Escape") {
+    cancelHotkeyCapture();
+    return true;
+  }
+  if (["Control", "Alt", "Shift", "Meta"].includes(event.key) || event.repeat) return true;
+
+  const modifiers = [];
+  if (event.ctrlKey) modifiers.push("Ctrl");
+  if (event.altKey) modifiers.push("Alt");
+  if (event.shiftKey) modifiers.push("Shift");
+  const key = hotkeyKeyLabel(event);
+  if (modifiers.length < 2 || !key) {
+    showSettingsMessage("请按至少两个修饰键，再加字母、数字或 F1-F12。", "error");
+    return true;
+  }
+
+  hotkeyCaptureActive = false;
+  const hotkey = [...modifiers, key].join(" + ");
+  elements.recordingHotkey.classList.remove("capturing");
+  elements.recordingHotkey.textContent = "正在保存…";
+  elements.recordingHotkey.disabled = true;
+  showSettingsMessage(`正在注册 ${hotkey}…`);
+  postDesktopMessage({ type: "settings:set-hotkey", hotkey });
+  return true;
 }
 async function api(requestPath, options = {}) {
   const response = await fetch(requestPath, {
@@ -271,6 +333,10 @@ function renderRecorderStatus(status = currentRecorderStatus) {
   currentRecorderStatus = status;
   const state = status.state || "idle";
   const active = ["starting", "recording", "stopping"].includes(state);
+  if (state !== lastDesktopRecorderState) {
+    lastDesktopRecorderState = state;
+    postDesktopMessage({ type: "recorder:state", state });
+  }
   const labels = {
     idle: "准备录音",
     starting: "正在连接麦克风",
@@ -548,7 +614,13 @@ elements.appSettingsToggle.addEventListener("click", () => {
   setSettingsPanel(elements.appSettingsPanel.hidden);
 });
 elements.appSettingsClose.addEventListener("click", () => setSettingsPanel(false));
-elements.startWithWindows.addEventListener("change", () => {
+elements.recordingHotkey.addEventListener("click", () => {
+  if (!desktopSettingsAvailable) return;
+  hotkeyCaptureActive = true;
+  elements.recordingHotkey.classList.add("capturing");
+  elements.recordingHotkey.textContent = "请按组合键…";
+  showSettingsMessage("按 Esc 可以取消。至少使用两个 Ctrl / Alt / Shift 修饰键。");
+});elements.startWithWindows.addEventListener("change", () => {
   if (!desktopSettingsAvailable) return;
   elements.startWithWindows.disabled = true;
   showSettingsMessage("正在保存设置…");
@@ -576,6 +648,7 @@ document.addEventListener("click", (event) => {
   setSettingsPanel(false);
 });
 document.addEventListener("keydown", (event) => {
+  if (captureHotkey(event)) return;
   if (event.key === "Escape") setSettingsPanel(false);
 });
 document.addEventListener("visibilitychange", monitorRecorderDevices);

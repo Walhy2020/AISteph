@@ -7,7 +7,7 @@ async function read(relativePath, encoding = "utf8") {
 }
 
 test("AISteph Voice客户端具备单实例、托盘、快捷键和内嵌工作台", async () => {
-  const [project, app, window, hotkey, service, desktopSettings, iconSvg, webHtml, webStyles, webScript] = await Promise.all([
+  const [project, app, window, hotkey, service, desktopSettings, iconSvg, recordingIconSvg, recordingIconBytes, webHtml, webStyles, webScript] = await Promise.all([
     read("client/AIStephVoice/AIStephVoice.csproj"),
     read("client/AIStephVoice/App.xaml.cs"),
     read("client/AIStephVoice/MainWindow.xaml.cs"),
@@ -15,7 +15,8 @@ test("AISteph Voice客户端具备单实例、托盘、快捷键和内嵌工作�
     read("client/AIStephVoice/ServiceManager.cs"),
     read("client/AIStephVoice/DesktopSettings.cs"),
     read("assets/branding/aisteph-voice-icon.svg"),
-    read("src/web/index.html"),
+    read("assets/branding/aisteph-voice-recording-icon.svg"),
+    read("client/AIStephVoice/Assets/AIStephVoiceRecording.ico", null),    read("src/web/index.html"),
     read("src/web/styles.css"),
     read("src/web/app.js")
   ]);
@@ -25,6 +26,8 @@ test("AISteph Voice客户端具备单实例、托盘、快捷键和内嵌工作�
   assert.match(project, /<UseWPF>true<\/UseWPF>/);
   assert.match(project, /Microsoft\.Web\.WebView2/);
   assert.match(project, /<ApplicationIcon>Assets\\AIStephVoice\.ico<\/ApplicationIcon>/);
+  assert.match(project, /AIStephVoiceRecording\.ico/);
+  assert.match(project, /AIStephVoiceRecording\.png/);
   assert.match(app, /Local\\\\AIStephVoice\.App\.v1/);
   assert.match(app, /EventWaitHandle\.OpenExisting/);
   assert.match(app, /window\.ShowAndActivate/);
@@ -33,15 +36,25 @@ test("AISteph Voice客户端具备单实例、托盘、快捷键和内嵌工作�
   assert.match(app, /window\.Hide/);
   assert.match(window, /NotifyIcon/);
   assert.match(window, /EnsureCoreWebView2Async/);
-  assert.match(window, /Ctrl \+ Alt \+ R/);
   assert.match(window, /TimeSpan\.FromHours\(12\)/);
   assert.match(window, /检查在线更新/);
   assert.match(window, /WebMessageReceived/);
   assert.match(window, /settings:set-startup/);
   assert.match(window, /IsTrustedMessageSource/);
   assert.match(window, /OpenRecordingsDirectory/);
+  assert.match(window, /settings:set-hotkey/);
+  assert.match(window, /TryUpdate/);
+  assert.match(window, /AIStephVoiceRecording\.ico/);
+  assert.match(window, /SetRecordingVisual/);
+  assert.match(window, /recorder:state/);
   assert.match(hotkey, /RegisterHotKey/);
   assert.match(hotkey, /ModNoRepeat/);
+  assert.match(hotkey, /TryUpdate/);
+  assert.match(hotkey, /TryNormalize/);
+  assert.match(hotkey, /ModShift/);
+  assert.match(hotkey, /modifierCount < 2/);
+  assert.match(desktopSettings, /RecordingHotkey/);
+  assert.match(desktopSettings, /SetHotkey/);
   assert.match(service, /Process\.Start/);
   assert.match(service, /runtime.*src.*server\.js/s);
   assert.match(service, /SpecialFolder\.LocalApplicationData/);
@@ -53,15 +66,26 @@ test("AISteph Voice客户端具备单实例、托盘、快捷键和内嵌工作�
   assert.match(iconSvg, /fill="#2E9B64"/);
   assert.match(iconSvg, /text-anchor="end"/);
   assert.match(iconSvg, /y="128"/);
+  assert.match(recordingIconSvg, /fill="#C83F49"/);
+  assert.match(recordingIconSvg, /text-anchor="end"/);
+  assert.equal(recordingIconBytes[0], 0x00);
+  assert.equal(recordingIconBytes[1], 0x00);
+  assert.equal(recordingIconBytes[2], 0x01);
+  assert.equal(recordingIconBytes[3], 0x00);
   assert.match(webHtml, /<title>AISteph Voice · 录音工作台<\/title>/);
   assert.match(webHtml, /class="brand-mark" aria-hidden="true">S<\/span>/);
   assert.match(webHtml, /class="brand-version">v__AISTEPH_VERSION__/);
   assert.match(webHtml, /id="app-settings-panel"/);
+  assert.match(webHtml, /class="hotkey-capture-button"/);
   assert.doesNotMatch(webHtml, /id="service-status"/);
   assert.match(webStyles, /place-items: center end/);
   assert.match(webStyles, /background: var\(--success\)/);
   assert.match(webStyles, /\.app-settings-panel/);
+  assert.match(webStyles, /\.hotkey-capture-button\.capturing/);
   assert.match(webScript, /settings:set-startup/);
+  assert.match(webScript, /settings:set-hotkey/);
+  assert.match(webScript, /captureHotkey/);
+  assert.match(webScript, /recorder:state/);
   assert.match(webScript, /settings:open-recordings/);
 });
 

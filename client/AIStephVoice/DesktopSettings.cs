@@ -8,9 +8,28 @@ internal static class DesktopSettings
 {
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string RunValueName = "AISteph Voice";
+    private const string SettingsKeyPath = @"Software\AISteph Voice";
+    private const string HotkeyValueName = "RecordingHotkey";
 
-    public const string HotkeyDisplay = "Ctrl + Alt + R";
+    public static string GetHotkey()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(SettingsKeyPath, writable: false);
+        var stored = key?.GetValue(HotkeyValueName) as string;
+        return GlobalHotkey.TryNormalize(stored, out var normalized)
+            ? normalized
+            : GlobalHotkey.DefaultDisplayText;
+    }
 
+    public static void SetHotkey(string shortcut)
+    {
+        if (!GlobalHotkey.TryNormalize(shortcut, out var normalized))
+        {
+            throw new InvalidOperationException("快捷键格式无效。");
+        }
+        using var key = Registry.CurrentUser.CreateSubKey(SettingsKeyPath, writable: true)
+            ?? throw new InvalidOperationException("无法保存 AISteph Voice 设置。");
+        key.SetValue(HotkeyValueName, normalized, RegistryValueKind.String);
+    }
     public static bool IsStartWithWindowsEnabled()
     {
         using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: false);

@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 
@@ -13,16 +15,28 @@ public partial class MainWindow : Window
 {
     private readonly System.Windows.Forms.NotifyIcon trayIcon;
     private readonly System.Windows.Forms.ToolStripMenuItem toggleMenuItem;
+    private readonly System.Drawing.Icon idleTrayIcon;
+    private readonly System.Drawing.Icon recordingTrayIcon;
+    private readonly BitmapImage idleWindowIcon;
+    private readonly BitmapImage recordingWindowIcon;
     private readonly DispatcherTimer updateTimer;
     private GlobalHotkey? globalHotkey;
     private bool requestActive;
     private bool exitRequested;
     private bool hideNoticeShown;
+    private bool recordingStateRefreshActive;
+    private bool recordingVisualActive;
 
     public MainWindow()
     {
         InitializeComponent();
-        toggleMenuItem = new System.Windows.Forms.ToolStripMenuItem("开始 / 停止录音    Ctrl+Alt+R");
+        var configuredHotkey = DesktopSettings.GetHotkey();
+        idleTrayIcon = LoadTrayIcon("Assets/AIStephVoice.ico");
+        recordingTrayIcon = LoadTrayIcon("Assets/AIStephVoiceRecording.ico");
+        idleWindowIcon = LoadWindowIcon("Assets/AIStephVoice.png");
+        recordingWindowIcon = LoadWindowIcon("Assets/AIStephVoiceRecording.png");
+        Icon = idleWindowIcon;
+        toggleMenuItem = new System.Windows.Forms.ToolStripMenuItem($"开始 / 停止录音    {configuredHotkey}");
         toggleMenuItem.Click += async (_, _) => await Dispatcher.InvokeAsync(ToggleRecordingAsync);
 
         var openMenuItem = new System.Windows.Forms.ToolStripMenuItem("打开 AISteph Voice");
@@ -41,12 +55,10 @@ public partial class MainWindow : Window
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add(exitMenuItem);
 
-        var applicationIcon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath ?? string.Empty)
-            ?? SystemIcons.Application;
         trayIcon = new System.Windows.Forms.NotifyIcon
         {
-            Icon = applicationIcon,
-            Text = "AISteph Voice（Ctrl+Alt+R）",
+            Icon = idleTrayIcon,
+            Text = $"AISteph Voice（{configuredHotkey}）",
             ContextMenuStrip = menu,
             Visible = true
         };
@@ -55,6 +67,7 @@ public partial class MainWindow : Window
         updateTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(12) };
         updateTimer.Tick += async (_, _) => await CheckForUpdatesAsync(false);
         updateTimer.Start();
+
 
         SourceInitialized += HandleSourceInitialized;
         Closing += HandleClosing;
@@ -70,7 +83,9 @@ public partial class MainWindow : Window
         WorkspaceView.CoreWebView2.WebMessageReceived += HandleWebMessageReceived;
         WorkspaceView.CoreWebView2.NavigationCompleted += HandleNavigationCompleted;
         WorkspaceView.Source = new Uri(ServiceManager.Origin + "/");
-        Notify("AISteph Voice 已就绪", "按 Ctrl + Alt + R 即可开始或停止录音。", System.Windows.Forms.ToolTipIcon.Info);
+        var hotkey = DesktopSettings.GetHotkey();
+        Notify("AISteph Voice 已就绪", $"按 {hotkey} 即可开始或停止录音。", System.Windows.Forms.ToolTipIcon.Info);
+        _ = RefreshRecordingVisualAsync();
         _ = CheckForUpdatesAsync(false);
     }
 
@@ -86,13 +101,15 @@ public partial class MainWindow : Window
 
     private void HandleSourceInitialized(object? sender, EventArgs eventArgs)
     {
-        globalHotkey = new GlobalHotkey(new WindowInteropHelper(this).Handle);
+        var configuredHotkey = DesktopSettings.GetHotkey();
+        globalHotkey = new GlobalHotkey(new WindowInteropHelper(this).Handle, configuredHotkey);
         globalHotkey.Pressed += async (_, _) => await ToggleRecordingAsync();
+        UpdateHotkeyPresentation();
         if (!globalHotkey.IsRegistered)
         {
             Notify(
                 "快捷键注册失败",
-                "Ctrl + Alt + R 已被其他程序占用，仍可通过托盘菜单录音。",
+                $"{configuredHotkey} 已被其他程序占用，请在设置中更换。",
                 System.Windows.Forms.ToolTipIcon.Warning
             );
         }
@@ -122,8 +139,18 @@ public partial class MainWindow : Window
             var type = typeProperty.GetString();
             switch (type)
             {
-                case "settings:get":
+                case "recorder:state":
+                    if (message.RootElement.TryGetProperty("state", out var stateProperty)
+                        && stateProperty.ValueKind == JsonValueKind.String)
+                    {
+                        var recorderState = stateProperty.GetString();
+                        SetRecordingVisual(recorderState is "starting" or "recording" or "stopping");
+                    }
+                    break;                case "settings:get":
                     SendDesktopSettings();
+                    break;
+                case "settings:set-hotkey":
+                    UpdateRecordingHotkey(message.RootElement);
                     break;
                 case "settings:set-startup":
                     if (!message.RootElement.TryGetProperty("enabled", out var enabledProperty)
@@ -168,7 +195,8 @@ public partial class MainWindow : Window
         {
             type = "settings:state",
             isDesktopClient = true,
-            hotkey = DesktopSettings.HotkeyDisplay,
+            hotkey = globalHotkey?.DisplayText ?? DesktopSettings.GetHotkey(),
+            hotkeyRegistered = globalHotkey?.IsRegistered ?? false,
             startWithWindows = DesktopSettings.IsStartWithWindowsEnabled(),
             recordingsPath = DesktopSettings.EnsureRecordingsDirectory(),
             message,
@@ -186,6 +214,38 @@ public partial class MainWindow : Window
             message
         }));
     }
+    private void UpdateRecordingHotkey(JsonElement message)
+    {
+        if (!message.TryGetProperty("hotkey", out var hotkeyProperty)
+            || hotkeyProperty.ValueKind != JsonValueKind.String)
+        {
+            throw new InvalidOperationException("快捷键设置无效。");
+        }
+        if (globalHotkey is null)
+        {
+            throw new InvalidOperationException("快捷键服务尚未就绪，请稍后重试。");
+        }
+
+        var previous = globalHotkey.DisplayText;
+        var requested = hotkeyProperty.GetString() ?? string.Empty;
+        if (!globalHotkey.TryUpdate(requested, out var error))
+        {
+            UpdateHotkeyPresentation();
+            throw new InvalidOperationException(error);
+        }
+        try
+        {
+            DesktopSettings.SetHotkey(globalHotkey.DisplayText);
+        }
+        catch
+        {
+            globalHotkey.TryUpdate(previous, out _);
+            UpdateHotkeyPresentation();
+            throw;
+        }
+        UpdateHotkeyPresentation();
+        SendDesktopSettings($"快捷键已设置为 {globalHotkey.DisplayText}。");
+    }
     private async Task ToggleRecordingAsync()
     {
         if (requestActive) return;
@@ -197,7 +257,7 @@ public partial class MainWindow : Window
             var result = await RecorderApi.ToggleAsync();
             if (result.Action == "started")
             {
-                trayIcon.Text = "AISteph Voice 正在录音";
+                SetRecordingVisual(true);
                 Notify(
                     "录音已开始",
                     "正在使用：" + (result.DeviceName ?? "默认麦克风"),
@@ -206,7 +266,7 @@ public partial class MainWindow : Window
             }
             else
             {
-                trayIcon.Text = "AISteph Voice（Ctrl+Alt+R）";
+                SetRecordingVisual(false);
                 Notify("录音已保存", "音频已经进入录音资料库。", System.Windows.Forms.ToolTipIcon.Info);
             }
         }
@@ -218,7 +278,65 @@ public partial class MainWindow : Window
         {
             toggleMenuItem.Enabled = true;
             requestActive = false;
+            await RefreshRecordingVisualAsync();
         }
+    }
+
+    private void UpdateHotkeyPresentation()
+    {
+        var hotkey = globalHotkey?.DisplayText ?? DesktopSettings.GetHotkey();
+        toggleMenuItem.Text = $"开始 / 停止录音    {hotkey}";
+        if (!recordingVisualActive) trayIcon.Text = $"AISteph Voice（{hotkey}）";
+    }
+
+    private async Task RefreshRecordingVisualAsync()
+    {
+        if (recordingStateRefreshActive) return;
+        recordingStateRefreshActive = true;
+        try
+        {
+            var state = await RecorderApi.GetStateAsync();
+            SetRecordingVisual(state is "starting" or "recording" or "stopping");
+        }
+        catch
+        {
+            // The service may be restarting; retain the last known icon state.
+        }
+        finally
+        {
+            recordingStateRefreshActive = false;
+        }
+    }
+
+    private void SetRecordingVisual(bool recording)
+    {
+        if (recordingVisualActive == recording) return;
+        recordingVisualActive = recording;
+        Icon = recording ? recordingWindowIcon : idleWindowIcon;
+        trayIcon.Icon = recording ? recordingTrayIcon : idleTrayIcon;
+        trayIcon.Text = recording
+            ? "AISteph Voice 正在录音"
+            : $"AISteph Voice（{globalHotkey?.DisplayText ?? DesktopSettings.GetHotkey()}）";
+    }
+
+    private static System.Drawing.Icon LoadTrayIcon(string resourcePath)
+    {
+        var resource = System.Windows.Application.GetResourceStream(new Uri(resourcePath, UriKind.Relative))
+            ?? throw new FileNotFoundException("客户端图标资源不存在。", resourcePath);
+        using var stream = resource.Stream;
+        using var icon = new System.Drawing.Icon(stream);
+        return (System.Drawing.Icon)icon.Clone();
+    }
+
+    private static BitmapImage LoadWindowIcon(string resourcePath)
+    {
+        var image = new BitmapImage();
+        image.BeginInit();
+        image.UriSource = new Uri($"pack://application:,,,/{resourcePath}", UriKind.Absolute);
+        image.CacheOption = BitmapCacheOption.OnLoad;
+        image.EndInit();
+        image.Freeze();
+        return image;
     }
 
     private async Task CheckForUpdatesAsync(bool manual)
@@ -299,6 +417,8 @@ public partial class MainWindow : Window
         globalHotkey?.Dispose();
         trayIcon.Visible = false;
         trayIcon.Dispose();
+        idleTrayIcon.Dispose();
+        recordingTrayIcon.Dispose();
         await ServiceManager.StopOwnedServiceAsync();
         System.Windows.Application.Current.Shutdown();
     }
@@ -313,7 +433,7 @@ public partial class MainWindow : Window
             hideNoticeShown = true;
             Notify(
                 "AISteph Voice 仍在运行",
-                "窗口已隐藏到系统托盘，Ctrl + Alt + R 仍可录音。",
+                $"窗口已隐藏到系统托盘，{globalHotkey?.DisplayText ?? DesktopSettings.GetHotkey()} 仍可录音。",
                 System.Windows.Forms.ToolTipIcon.Info
             );
         }

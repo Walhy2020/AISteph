@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$ProjectRoot = ""
 )
 
@@ -19,36 +19,43 @@ public static class NativeIconHandle {
 $assetRoot = Join-Path $ProjectRoot "assets\branding"
 $clientAssetRoot = Join-Path $ProjectRoot "client\AIStephVoice\Assets"
 New-Item -ItemType Directory -Force -Path $assetRoot, $clientAssetRoot | Out-Null
-$pngPath = Join-Path $assetRoot "aisteph-voice-icon.png"
-$icoPath = Join-Path $clientAssetRoot "AIStephVoice.ico"
+$variants = @(
+  [pscustomobject]@{ AssetName = "aisteph-voice-icon"; ClientName = "AIStephVoice"; Color = "#2E9B64" },
+  [pscustomobject]@{ AssetName = "aisteph-voice-recording-icon"; ClientName = "AIStephVoiceRecording"; Color = "#C83F49" }
+)
 
-$bitmap = New-Object System.Drawing.Bitmap 256, 256, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-try {
-  $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-  $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-  $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml("#2E9B64"))
-  $font = New-Object System.Drawing.Font "Segoe UI", 166, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
-  $brush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::White)
-  $format = New-Object System.Drawing.StringFormat
+foreach ($variant in $variants) {
+  $pngPath = Join-Path $assetRoot ($variant.AssetName + ".png")
+  $clientPngPath = Join-Path $clientAssetRoot ($variant.ClientName + ".png")
+  $icoPath = Join-Path $clientAssetRoot ($variant.ClientName + ".ico")
+  $bitmap = New-Object System.Drawing.Bitmap 256, 256, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+  $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
   try {
-    $format.Alignment = [System.Drawing.StringAlignment]::Far
-    $format.LineAlignment = [System.Drawing.StringAlignment]::Center
-    $graphics.DrawString("S", $font, $brush, (New-Object System.Drawing.RectangleF 0, 0, 234, 250), $format)
-    $bitmap.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png)
-    $iconHandle = $bitmap.GetHicon()
+    $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
+    $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml($variant.Color))
+    $font = New-Object System.Drawing.Font "Segoe UI", 166, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
+    $brush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::White)
+    $format = New-Object System.Drawing.StringFormat
     try {
-      $icon = [System.Drawing.Icon]::FromHandle($iconHandle)
-      $stream = [System.IO.File]::Create($icoPath)
-      try { $icon.Save($stream) } finally { $stream.Dispose(); $icon.Dispose() }
+      $format.Alignment = [System.Drawing.StringAlignment]::Far
+      $format.LineAlignment = [System.Drawing.StringAlignment]::Center
+      $graphics.DrawString("S", $font, $brush, (New-Object System.Drawing.RectangleF 0, 0, 234, 250), $format)
+      $bitmap.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png)
+      Copy-Item -LiteralPath $pngPath -Destination $clientPngPath -Force
+      $iconHandle = $bitmap.GetHicon()
+      try {
+        $icon = [System.Drawing.Icon]::FromHandle($iconHandle)
+        $stream = [System.IO.File]::Create($icoPath)
+        try { $icon.Save($stream) } finally { $stream.Dispose(); $icon.Dispose() }
+      } finally {
+        [NativeIconHandle]::DestroyIcon($iconHandle) | Out-Null
+      }
     } finally {
-      [NativeIconHandle]::DestroyIcon($iconHandle) | Out-Null
+      $format.Dispose(); $brush.Dispose(); $font.Dispose()
     }
   } finally {
-    $format.Dispose(); $brush.Dispose(); $font.Dispose()
+    $graphics.Dispose(); $bitmap.Dispose()
   }
-} finally {
-  $graphics.Dispose(); $bitmap.Dispose()
+  Write-Output $icoPath
 }
-Copy-Item -LiteralPath $pngPath -Destination (Join-Path $clientAssetRoot "AIStephVoice.png") -Force
-Write-Output $icoPath

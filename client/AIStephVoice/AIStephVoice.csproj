@@ -23,6 +23,8 @@
   <ItemGroup>
     <Resource Include="Assets\AIStephVoice.ico" />
     <Resource Include="Assets\AIStephVoice.png" />
+    <Resource Include="Assets\AIStephVoiceRecording.ico" />
+    <Resource Include="Assets\AIStephVoiceRecording.png" />
     <Content Include="..\..\src\**\*.*" Link="runtime\src\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\VERSION" Link="runtime\VERSION" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\package.json" Link="runtime\package.json" CopyToOutputDirectory="PreserveNewest" />

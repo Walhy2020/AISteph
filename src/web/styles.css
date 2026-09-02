@@ -277,7 +277,7 @@ button:disabled {
   font-size: 12px;
 }
 
-.settings-row kbd {
+.hotkey-capture-button {
   flex: 0 0 auto;
   padding: 5px 8px;
   border: 1px solid var(--line-strong);
@@ -289,6 +289,18 @@ button:disabled {
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.hotkey-capture-button:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.hotkey-capture-button.capturing {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .settings-toggle-row {
@@ -335,6 +347,10 @@ button:disabled {
 .settings-message.error {
   color: var(--error);
 }
+.settings-message.warning {
+  color: var(--warning);
+}
+
 .mobile-menu {
   display: none;
 }
