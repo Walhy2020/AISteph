@@ -1,135 +1,122 @@
 ---
 version: alpha
-name: Apple-design-analysis
-description: A photography-first interface that turns marketing into a museum gallery. Edge-to-edge product tiles alternate light and dark canvases, framed by SF Pro Display headlines with negative letter-spacing and a single Action Blue (#0066cc) interactive color. UI chrome recedes so the product can speak — no decorative gradients, no shadows on chrome, only the one signature drop-shadow under product imagery resting on a surface.
+name: BMW-design-analysis
+description: BMW's corporate site — distinct from BMW M's motorsport-bombastic variant, this is a measured and settled corporate-automotive interface. On a light (cream-tinted white) canvas, BMW corporate blue (#1c69d4) carries every primary CTA; dark navy hero bands frame model photography. BMW Type Next Latin sets the entire hierarchy on two weights — heavy 700 display and Light 300 body. Configuration and reservation flows ride a card-based 4-up grid, where each card holds a model render, a name, and a "Learn More" link.
 
 colors:
-  primary: "#0066cc"
-  primary-focus: "#0071e3"
-  primary-on-dark: "#2997ff"
-  ink: "#1d1d1f"
-  body: "#1d1d1f"
-  body-on-dark: "#ffffff"
-  body-muted: "#cccccc"
-  ink-muted-80: "#333333"
-  ink-muted-48: "#7a7a7a"
-  divider-soft: "#f0f0f0"
-  hairline: "#e0e0e0"
+  primary: "#1c69d4"
+  primary-active: "#0653b6"
+  primary-disabled: "#d6d6d6"
+  ink: "#262626"
+  body: "#3c3c3c"
+  body-strong: "#1a1a1a"
+  muted: "#6b6b6b"
+  muted-soft: "#9a9a9a"
+  hairline: "#e6e6e6"
+  hairline-strong: "#cccccc"
   canvas: "#ffffff"
-  canvas-parchment: "#f5f5f7"
-  surface-pearl: "#fafafc"
-  surface-tile-1: "#272729"
-  surface-tile-2: "#2a2a2c"
-  surface-tile-3: "#252527"
-  surface-black: "#000000"
-  surface-chip-translucent: "#d2d2d7"
+  surface-soft: "#f7f7f7"
+  surface-card: "#fafafa"
+  surface-strong: "#ebebeb"
+  surface-dark: "#1a2129"
+  surface-dark-elevated: "#262e38"
   on-primary: "#ffffff"
   on-dark: "#ffffff"
+  on-dark-soft: "#bbbbbb"
+  m-blue-light: "#0066b1"
+  m-blue-dark: "#1c69d4"
+  m-red: "#e22718"
+  success: "#22c55e"
+  warning: "#f59e0b"
+  error: "#dc2626"
 
 typography:
-  hero-display:
-    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
-    fontSize: 56px
-    fontWeight: 600
-    lineHeight: 1.07
-    letterSpacing: -0.28px
+  display-xl:
+    fontFamily: "'BMW Type Next Latin', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: 64px
+    fontWeight: 700
+    lineHeight: 1.05
+    letterSpacing: 0
   display-lg:
-    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
-    fontSize: 40px
-    fontWeight: 600
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 48px
+    fontWeight: 700
     lineHeight: 1.1
     letterSpacing: 0
   display-md:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 34px
-    fontWeight: 600
-    lineHeight: 1.47
-    letterSpacing: -0.374px
-  lead:
-    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
-    fontSize: 28px
-    fontWeight: 400
-    lineHeight: 1.14
-    letterSpacing: 0.196px
-  lead-airy:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 24px
-    fontWeight: 300
-    lineHeight: 1.5
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 32px
+    fontWeight: 700
+    lineHeight: 1.15
     letterSpacing: 0
-  tagline:
-    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
-    fontSize: 21px
-    fontWeight: 600
-    lineHeight: 1.19
-    letterSpacing: 0.231px
-  body-strong:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 17px
-    fontWeight: 600
-    lineHeight: 1.24
-    letterSpacing: -0.374px
-  body:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 17px
-    fontWeight: 400
-    lineHeight: 1.47
-    letterSpacing: -0.374px
-  dense-link:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 17px
-    fontWeight: 400
-    lineHeight: 2.41
+  display-sm:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 24px
+    fontWeight: 700
+    lineHeight: 1.25
+    letterSpacing: 0
+  title-lg:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 20px
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: 0
+  title-md:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 18px
+    fontWeight: 700
+    lineHeight: 1.4
+    letterSpacing: 0
+  title-sm:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 16px
+    fontWeight: 700
+    lineHeight: 1.4
+    letterSpacing: 0
+  body-md:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 16px
+    fontWeight: 300
+    lineHeight: 1.55
+    letterSpacing: 0
+  body-sm:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 14px
+    fontWeight: 300
+    lineHeight: 1.55
     letterSpacing: 0
   caption:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 14px
-    fontWeight: 400
-    lineHeight: 1.43
-    letterSpacing: -0.224px
-  caption-strong:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 14px
-    fontWeight: 600
-    lineHeight: 1.29
-    letterSpacing: -0.224px
-  button-large:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 18px
-    fontWeight: 300
-    lineHeight: 1.0
-    letterSpacing: 0
-  button-utility:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 14px
-    fontWeight: 400
-    lineHeight: 1.29
-    letterSpacing: -0.224px
-  fine-print:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontFamily: "'BMW Type Next Latin', sans-serif"
     fontSize: 12px
     fontWeight: 400
-    lineHeight: 1.0
-    letterSpacing: -0.12px
-  micro-legal:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 10px
-    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: 0.5px
+  label-uppercase:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 13px
+    fontWeight: 700
     lineHeight: 1.3
-    letterSpacing: -0.08px
-  nav-link:
-    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
-    fontSize: 12px
-    fontWeight: 400
+    letterSpacing: 1.5px
+    textTransform: uppercase
+  button:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 14px
+    fontWeight: 700
     lineHeight: 1.0
-    letterSpacing: -0.12px
+    letterSpacing: 0.5px
+  nav-link:
+    fontFamily: "'BMW Type Next Latin', sans-serif"
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: 0.3px
 
 rounded:
   none: 0px
-  xs: 5px
-  sm: 8px
-  md: 11px
-  lg: 18px
+  xs: 2px
+  sm: 4px
+  md: 8px
+  lg: 12px
   pill: 9999px
   full: 9999px
 
@@ -137,272 +124,275 @@ spacing:
   xxs: 4px
   xs: 8px
   sm: 12px
-  md: 17px
+  md: 16px
   lg: 24px
   xl: 32px
   xxl: 48px
   section: 80px
 
 components:
+  top-nav:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.nav-link}"
+    height: 64px
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.on-primary}"
-    typography: "{typography.body}"
-    rounded: "{rounded.pill}"
-    padding: 11px 22px
-  button-primary-focus:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    rounded: "{rounded.pill}"
+    typography: "{typography.button}"
+    rounded: "{rounded.none}"
+    padding: 14px 32px
+    height: 48px
   button-primary-active:
-    backgroundColor: "{colors.primary}"
+    backgroundColor: "{colors.primary-active}"
     textColor: "{colors.on-primary}"
-    rounded: "{rounded.pill}"
-  button-secondary-pill:
+    rounded: "{rounded.none}"
+  button-primary-disabled:
+    backgroundColor: "{colors.primary-disabled}"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.none}"
+  button-secondary:
     backgroundColor: "{colors.canvas}"
-    textColor: "{colors.primary}"
-    typography: "{typography.body}"
-    rounded: "{rounded.pill}"
-    padding: 11px 22px
-  button-dark-utility:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.button-utility}"
-    rounded: "{rounded.sm}"
-    padding: 8px 15px
-  button-pearl-capsule:
-    backgroundColor: "{colors.surface-pearl}"
-    textColor: "{colors.ink-muted-80}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.md}"
-    padding: 8px 14px
-  button-store-hero:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-large}"
-    rounded: "{rounded.pill}"
-    padding: 14px 28px
-  button-icon-circular:
-    backgroundColor: "{colors.surface-chip-translucent}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.full}"
-    size: 44px
+    typography: "{typography.button}"
+    rounded: "{rounded.none}"
+    padding: 13px 31px
+    height: 48px
+  button-secondary-on-dark:
+    backgroundColor: transparent
+    textColor: "{colors.on-dark}"
+    typography: "{typography.button}"
+    rounded: "{rounded.none}"
+    padding: 13px 31px
+  button-text-link:
+    backgroundColor: transparent
+    textColor: "{colors.ink}"
+    typography: "{typography.label-uppercase}"
   text-link:
     backgroundColor: transparent
-    textColor: "{colors.primary}"
-    typography: "{typography.body}"
-  text-link-on-dark:
-    backgroundColor: transparent
-    textColor: "{colors.primary-on-dark}"
-    typography: "{typography.body}"
-  global-nav:
-    backgroundColor: "{colors.surface-black}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.nav-link}"
-    height: 44px
-  sub-nav-frosted:
-    backgroundColor: "{colors.canvas-parchment}"
     textColor: "{colors.ink}"
-    typography: "{typography.tagline}"
-    height: 52px
-  product-tile-light:
+    typography: "{typography.body-md}"
+  hero-band-dark:
+    backgroundColor: "{colors.surface-dark}"
+    textColor: "{colors.on-dark}"
+    typography: "{typography.display-xl}"
+    padding: 80px
+  hero-photo-band:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
     typography: "{typography.display-lg}"
-    rounded: "{rounded.none}"
     padding: 80px
-  product-tile-parchment:
-    backgroundColor: "{colors.canvas-parchment}"
-    textColor: "{colors.ink}"
-    typography: "{typography.display-lg}"
-    rounded: "{rounded.none}"
-    padding: 80px
-  product-tile-dark:
-    backgroundColor: "{colors.surface-tile-1}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.display-lg}"
-    rounded: "{rounded.none}"
-    padding: 80px
-  product-tile-dark-2:
-    backgroundColor: "{colors.surface-tile-2}"
-    textColor: "{colors.on-dark}"
-    rounded: "{rounded.none}"
-  product-tile-dark-3:
-    backgroundColor: "{colors.surface-tile-3}"
-    textColor: "{colors.on-dark}"
-    rounded: "{rounded.none}"
-  store-utility-card:
+  model-card:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
-    typography: "{typography.body-strong}"
-    rounded: "{rounded.lg}"
+    typography: "{typography.title-md}"
+    rounded: "{rounded.none}"
     padding: 24px
-  configurator-option-chip:
+  model-card-photo:
+    backgroundColor: "{colors.surface-card}"
+    rounded: "{rounded.none}"
+  feature-photo-card:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.title-md}"
+    rounded: "{rounded.none}"
+    padding: 24px
+  spec-cell:
+    backgroundColor: transparent
+    textColor: "{colors.ink}"
+    typography: "{typography.display-sm}"
+    rounded: "{rounded.none}"
+    padding: 24px
+  inventory-card:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.title-sm}"
+    rounded: "{rounded.none}"
+    padding: 16px
+  filter-chip:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
     typography: "{typography.caption}"
-    rounded: "{rounded.pill}"
-    padding: 12px 16px
-  configurator-option-chip-selected:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.pill}"
-  search-input:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
-    rounded: "{rounded.pill}"
-    padding: 12px 20px
-    height: 44px
-  floating-sticky-bar:
-    backgroundColor: "{colors.canvas-parchment}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
-    height: 64px
-    padding: 12px 32px
-  environment-quote-card:
-    backgroundColor: "{colors.surface-tile-1}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.display-lg}"
     rounded: "{rounded.none}"
+    padding: 8px 14px
+  filter-chip-active:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.on-dark}"
+    rounded: "{rounded.none}"
+  configurator-option-tile:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.none}"
+    padding: 16px 24px
+  configurator-option-tile-selected:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.none}"
+    padding: 15px 23px
+  text-input:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.none}"
+    padding: 14px 16px
+    height: 48px
+  cookie-consent-card:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.body}"
+    typography: "{typography.body-sm}"
+    rounded: "{rounded.none}"
+    padding: 24px
+  category-tab:
+    backgroundColor: transparent
+    textColor: "{colors.muted}"
+    typography: "{typography.label-uppercase}"
+    rounded: "{rounded.none}"
+  category-tab-active:
+    backgroundColor: transparent
+    textColor: "{colors.ink}"
+    typography: "{typography.label-uppercase}"
+    rounded: "{rounded.none}"
+  m-stripe-divider:
+    backgroundColor: transparent
+    rounded: "{rounded.none}"
+  cta-band-photo:
+    backgroundColor: "{colors.surface-dark}"
+    textColor: "{colors.on-dark}"
+    typography: "{typography.display-md}"
     padding: 80px
   footer:
-    backgroundColor: "{colors.canvas-parchment}"
-    textColor: "{colors.ink-muted-80}"
-    typography: "{typography.fine-print}"
+    backgroundColor: "{colors.surface-soft}"
+    textColor: "{colors.body}"
+    typography: "{typography.body-sm}"
     padding: 64px
 ---
 
 ## Overview
 
-Apple's web presence is a masterclass in **reverent product photography framed by near-invisible UI**. Every page is a stack of edge-to-edge product "tiles" — alternating light and dark canvases, each centered on a hero headline, a one-line tagline, two tiny blue pill CTAs, and an impossibly crisp product render. Nothing competes with the product. Typography is confident but quiet; color is either pure white, an off-white parchment, or a near-black tile; interactive elements are a single, quiet blue.
+BMW's corporate site carries a far more **measured, corporate-automotive** interface than its motorsport-bombastic cousin BMW M. The atmosphere is light: `{colors.canvas}` (#ffffff) is the base surface, `{colors.surface-card}` (#fafafa) carries the soft-grey card plates, and dark navy `{colors.surface-dark}` (#1a2129) appears only inside hero bands — one per page, framing the lead model render.
 
-Density is unusually low even by contemporary SaaS standards. Each tile occupies roughly one viewport, and there is no decorative chrome — no borders, no gradients, no decorative frames, no shadows on headlines. Elevation appears only when a product image rests on a surface (a single soft `rgba(0, 0, 0, 0.22) 3px 5px 30px` drop for visual weight). The result is a catalog that feels more like a museum gallery: the wall disappears and the artifact takes over.
+Type runs BMW's licensed **BMW Type Next Latin** at two weights: heavy 700 (display + button + nav) and Light 300 (body + secondary copy). That contrast — heavy display next to thin paragraph — is the editorial signature, channeling the brand's "European-engineered" voice. Weight 500 is deliberately absent; weight 400 only appears on caption and nav-link in neutral utility contexts.
 
-Store and shop surfaces retain the same chassis but switch modes. The product configurator (iPhone 17 Pro, accessories grid) introduces a tight grid of white utility cards at `{rounded.lg}` (18px) radius with a thin border, paired with a persistent thin sub-nav strip. The environment page leans darker and more editorial. Across all five surfaces the typographic system, spacing rhythm, and the single blue accent are consistent — this is one design language expressed at different volumes.
+The brand action color, **BMW corporate blue** (`{colors.primary}` — #1c69d4), works alone across every primary CTA — buttons are **rectangular, 0px corner**, with white type. The site rotates a blue-button + dark-navy-hero combination across page rhythm. The M tricolor stripe (`{colors.m-blue-light}` → `{colors.m-blue-dark}` → `{colors.m-red}`) only appears in motorsport contexts and as M-model badges/dividers — never in the corporate site's main language.
+
+The configuration and reservation flows add a dealer-side inventory UI on top of the same system — filter chips, model cards, price tables — but typography and color stay identical; only density goes up.
 
 **Key Characteristics:**
-- Photography-first presentation; UI recedes so the product can speak.
-- Alternating full-bleed tile sections: white/parchment ↔ near-black, with the color change itself acting as the section divider.
-- Single blue accent (`{colors.primary}` — #0066cc) carries every interactive element. No second brand color exists.
-- Two button grammars: tiny blue pill CTAs (`{rounded.pill}`) and compact utility rects (`{rounded.sm}`).
-- SF Pro Display + SF Pro Text — negative letter-spacing at display sizes for the signature "Apple tight" headline feel.
-- Whisper-soft elevation used only when a product image needs to breathe — exactly one drop-shadow in the entire system.
-- Tight two-row nav: slim `{component.global-nav}` + product-specific `{component.sub-nav-frosted}` with persistent right-aligned primary CTA.
-- Section rhythm across multiple pages: light hero → dark product tile → light utility tile → dark tile → parchment footer — a predictable pulse.
+- Light `{colors.canvas}` is the base surface; dark navy `{colors.surface-dark}` appears only inside hero bands — page rhythm relies on contrast.
+- BMW corporate blue (`{colors.primary}` — #1c69d4) acts as the single primary action color.
+- BMW Type Next Latin: weight 700 display against weight 300 body is the signature.
+- Buttons are **rectangular, 0px radius** — corporate dialect, distinct from M's sportier radii.
+- Model cards run as 4-up or 5-up grids with no hairline border or only minimal border — just white plate + photo + title.
+- Photography (model renders) sits in environment, no shadow — depth comes entirely from color-block contrast.
+- M tricolor stripe appears only in M-model contexts — not part of the corporate language.
+- Section rhythm holds at `{spacing.section}` (80px) for every major band.
 
 ## Colors
 
-> **Source pages analyzed:** homepage, environment, store, iPhone 17 Pro buy page, accessories index. The color system is identical across all five surfaces; only the surface-mode mix differs.
-
 ### Brand & Accent
-- **Action Blue** (`{colors.primary}` — #0066cc): The single brand-level interactive color. All text links, all blue pill CTAs ("Learn more", "Buy"), and the focus ring root. This is Apple's quiet but universal "click me" signal. Press state shifts to a slightly darker variant via the active scale transform rather than a hex change.
-- **Focus Blue** (`{colors.primary-focus}` — #0071e3): A marginally brighter sibling of Action Blue, reserved for the keyboard focus ring on buttons (`outline: 2px solid`).
-- **Sky Link Blue** (`{colors.primary-on-dark}` — #2997ff): A brighter blue used on dark surfaces for in-copy links and inline callouts, where Action Blue would disappear against the tile background.
+- **BMW Blue (Primary)** (`{colors.primary}` — #1c69d4): The single brand action color. All primary CTAs, "Learn More" link prefixes (blue text), nav-link active state. Press shifts to `{colors.primary-active}` (#0653b6).
+- **M Blue Light** (`{colors.m-blue-light}` — #0066b1) + **M Blue Dark** (`{colors.m-blue-dark}` — #1c69d4) + **M Red** (`{colors.m-red}` — #e22718): The M tricolor stripe — appears on the corporate site only on M-model pages and the "M" badge. Never as CTA colors.
 
 ### Surface
-- **Pure White** (`{colors.canvas}` — #ffffff): The dominant canvas. Content, utility cards, store tiles, configurator grids.
-- **Parchment** (`{colors.canvas-parchment}` — #f5f5f7): The signature Apple off-white. Used for alternating light tiles, footer region, and the default page canvas in store utility sections. Just different enough from white to create rhythm.
-- **Pearl Button** (`{colors.surface-pearl}` — #fafafc): A near-white used as the fill for secondary "ghost" buttons — lighter than the parchment canvas so the button still reads as a button against `{colors.canvas-parchment}`.
-- **Near-Black Tile 1** (`{colors.surface-tile-1}` — #272729): The primary dark-tile surface on the homepage product grid.
-- **Near-Black Tile 2** (`{colors.surface-tile-2}` — #2a2a2c): A micro-step lighter — used where a dark tile sits directly above or below Tile 1 to create the faintest separation.
-- **Near-Black Tile 3** (`{colors.surface-tile-3}` — #252527): A micro-step darker — used at the bottom of the stack and in embedded video/player frames.
-- **Pure Black** (`{colors.surface-black}` — #000000): Reserved for true void — video player backgrounds, edge-to-edge photographic overlays, the global nav bar background.
-- **Translucent Chip Gray** (`{colors.surface-chip-translucent}` — #d2d2d7): The base hex of the translucent gray chip used over photography for circular control buttons. In production, applied at ~64% alpha as `rgba(210, 210, 215, 0.64)`.
+- **Canvas** (`{colors.canvas}` — #ffffff): The default page surface.
+- **Surface Soft** (`{colors.surface-soft}` — #f7f7f7): Soft grey for the footer and sub-navigation bands.
+- **Surface Card** (`{colors.surface-card}` — #fafafa): The light plate behind a model card's photo block.
+- **Surface Strong** (`{colors.surface-strong}` — #ebebeb): A slightly heavier grey used as a section divider.
+- **Surface Dark** (`{colors.surface-dark}` — #1a2129): Dark navy for hero bands and large dark CTAs. Not pure black — carries a warm undertone.
+- **Surface Dark Elevated** (`{colors.surface-dark-elevated}` — #262e38): One step lighter, used for nested cards on top of the dark hero.
+
+### Hairlines
+- **Hairline** (`{colors.hairline}` — #e6e6e6): The 1px divider — input outline, configurator card outline, table separator.
+- **Hairline Strong** (`{colors.hairline-strong}` — #cccccc): A more visible 1px outline — disabled secondary buttons, emphasized table border.
 
 ### Text
-- **Near-Black Ink** (`{colors.ink}` — #1d1d1f): The voice of every headline, every body paragraph, and the dark utility button's fill. Chosen instead of pure black to keep the page feeling photographic rather than printed.
-- **Body** (`{colors.body}` — #1d1d1f): Same hex as ink — Apple uses one near-black tone for all text on light surfaces.
-- **Body On Dark** (`{colors.body-on-dark}` — #ffffff): All text on dark tiles and on the global nav bar.
-- **Body Muted** (`{colors.body-muted}` — #cccccc): Secondary copy on dark tiles where pure white would be too loud.
-- **Ink Muted 80** (`{colors.ink-muted-80}` — #333333): Body text on the white Pearl Button surface — slightly softer than pure black.
-- **Ink Muted 48** (`{colors.ink-muted-48}` — #7a7a7a): Disabled button text and legal fine-print.
+- **Ink** (`{colors.ink}` — #262626): All display and primary text. Not pure black — soft against photography.
+- **Body** (`{colors.body}` — #3c3c3c): Default running text.
+- **Body Strong** (`{colors.body-strong}` — #1a1a1a): Emphasized paragraphs and lead text.
+- **Muted** (`{colors.muted}` — #6b6b6b): Footer links, breadcrumbs, captions.
+- **Muted Soft** (`{colors.muted-soft}` — #9a9a9a): Disabled text, fine-print legal.
+- **On Primary** (`{colors.on-primary}` — #ffffff): White text on a blue button.
+- **On Dark** (`{colors.on-dark}` — #ffffff): White text on a dark hero band.
+- **On Dark Soft** (`{colors.on-dark-soft}` — #bbbbbb): A slightly muted white for secondary text on dark bands.
 
-### Hairlines & Borders
-- **Divider Soft** (`{colors.divider-soft}` — #f0f0f0): The "border" tone on secondary buttons — functions as a ring shadow rather than a hard line. In production, often applied as `rgba(0, 0, 0, 0.04)`.
-- **Hairline** (`{colors.hairline}` — #e0e0e0): The 1px hairline border on store utility cards and configurator chips.
-
-### Brand Gradient
-**No decorative gradients.** Atmospheric depth on product photography (the iPhone 17 Pro camera plate, the Apple Watch bands, AirPods reflections) is inherent to the imagery, not a CSS gradient overlay. The environment page's hero uses photographic atmosphere (mountain vista at dawn) but no gradient tokens are defined. Apple is the rare luxury-brand site with zero gradient-based design tokens.
+### Semantic
+- **Success** (`{colors.success}` — #22c55e): Confirmation messages and "available" indicators.
+- **Warning** (`{colors.warning}` — #f59e0b): Warning callouts.
+- **Error** (`{colors.error}` — #dc2626): Validation errors.
 
 ## Typography
 
 ### Font Family
-- **Display**: `SF Pro Display, system-ui, -apple-system, sans-serif` — Apple's proprietary display face, optimized for sizes ≥ 19px. Defines the voice of every headline.
-- **Body / UI**: `SF Pro Text, system-ui, -apple-system, sans-serif` — the text-optimized variant used for body copy, captions, buttons, and links below 20px.
-- **OpenType features**: `font-variant-numeric: numerator` is enabled on numeric links (pricing tables, spec sheets). Display sizes rely on tight tracking rather than contextual ligatures.
+The system runs **BMW Type Next Latin** in two cuts: regular (display + UI labels) and **BMW Type Next Latin Light** (body + secondary copy). Fallback stack: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`.
+
+The display/body split is functional:
+- BMW Type Next Latin (700) → display headlines, button labels, nav links
+- BMW Type Next Latin Light (300) → paragraphs, descriptive copy
+- BMW Type Next Latin (400) → caption, neutral nav-link contexts
+
+This three-way split mirrors BMW M's — corporate and the M sub-brand share the same typographic DNA; only the weight/size ratios differ.
 
 ### Hierarchy
 
 | Token | Size | Weight | Line Height | Letter Spacing | Use |
 |---|---|---|---|---|---|
-| `{typography.hero-display}` | 56px | 600 | 1.07 | -0.28px | Hero headline; the signature "Apple tight" tracking |
-| `{typography.display-lg}` | 40px | 600 | 1.10 | 0 | Tile headlines atop every product tile |
-| `{typography.display-md}` | 34px | 600 | 1.47 | -0.374px | Section heads (SF Pro Text at display proportions) |
-| `{typography.lead}` | 28px | 400 | 1.14 | 0.196px | Product tile subcopy |
-| `{typography.lead-airy}` | 24px | 300 | 1.5 | 0 | Environment-page lead paragraphs (the rare weight 300) |
-| `{typography.tagline}` | 21px | 600 | 1.19 | 0.231px | Sub-tile tagline; sub-nav category name |
-| `{typography.body-strong}` | 17px | 600 | 1.24 | -0.374px | Inline strong emphasis |
-| `{typography.body}` | 17px | 400 | 1.47 | -0.374px | Default paragraph |
-| `{typography.dense-link}` | 17px | 400 | 2.41 | 0 | Footer / store utility link lists (relaxed leading) |
-| `{typography.caption}` | 14px | 400 | 1.43 | -0.224px | Secondary captions, button text |
-| `{typography.caption-strong}` | 14px | 600 | 1.29 | -0.224px | Emphasized captions |
-| `{typography.button-large}` | 18px | 300 | 1.0 | 0 | Store hero CTAs (the rare weight 300) |
-| `{typography.button-utility}` | 14px | 400 | 1.29 | -0.224px | Utility/nav button labels |
-| `{typography.fine-print}` | 12px | 400 | 1.0 | -0.12px | Fine-print, footer body |
-| `{typography.micro-legal}` | 10px | 400 | 1.3 | -0.08px | Micro legal disclaimers |
-| `{typography.nav-link}` | 12px | 400 | 1.0 | -0.12px | Global nav menu items |
+| `{typography.display-xl}` | 64px | 700 | 1.05 | 0 | Hero h1 ("iX3", model name) |
+| `{typography.display-lg}` | 48px | 700 | 1.1 | 0 | Section heads |
+| `{typography.display-md}` | 32px | 700 | 1.15 | 0 | Sub-section heads |
+| `{typography.display-sm}` | 24px | 700 | 1.25 | 0 | CTA-band headlines |
+| `{typography.title-lg}` | 20px | 700 | 1.3 | 0 | Card group titles |
+| `{typography.title-md}` | 18px | 700 | 1.4 | 0 | Model card title, intro paragraphs |
+| `{typography.title-sm}` | 16px | 700 | 1.4 | 0 | Inventory card title, list label |
+| `{typography.body-md}` | 16px | 300 (Light) | 1.55 | 0 | Default body — BMW Type Next Latin Light |
+| `{typography.body-sm}` | 14px | 300 (Light) | 1.55 | 0 | Footer body, fine-print |
+| `{typography.caption}` | 12px | 400 | 1.4 | 0.5px | Photo captions, meta |
+| `{typography.label-uppercase}` | 13px | 700 | 1.3 | 1.5px | "LEARN MORE" inline links, category tabs |
+| `{typography.button}` | 14px | 700 | 1.0 | 0.5px | Standard CTA button label |
+| `{typography.nav-link}` | 14px | 400 | 1.4 | 0.3px | Top-nav menu items |
 
 ### Principles
-
-- **Negative letter-spacing at display sizes.** Every headline at 17px and up carries a slight tracking tighten (`-0.12 → -0.374px`). This produces the iconic "Apple tight" headline cadence. Never used at 12px or below.
-- **Body copy at 17px, not 16px.** Apple breaks the SaaS convention and runs paragraph text at 17px. The extra pixel gives the page an unmistakable "reading, not scanning" pace.
-- **Weight 300 is real and rare.** Used deliberately on a handful of large-size reads (`{typography.button-large}` at 18px/300 and `{typography.lead-airy}` at 24px/300). It's not an accident — it's a light-atmosphere cue reserved for moments where the content should feel airy.
-- **Weight 600, not 700, for headlines.** Apple's headlines sit at weight 600. Weight 700 is used sparingly for `{typography.tagline}` (21px) when a touch more assertion is needed.
-- **Line-height is context-specific.** Display sizes use 1.07–1.19 (tight). Body uses 1.47. Utility link stacks in the footer/store use an unusually relaxed 2.41 (`{typography.dense-link}`). The 2.41 is not a bug — it's how the footer's dense link columns breathe.
-- **Weight 500 is deliberately absent.** The ladder is 300 / 400 / 600 / 700. Mid-weight readings always use 600.
+- The **700/300 contrast** is the editorial signature. Weight 500 is absent from the system.
+- **No negative letter-spacing** — BMW Type Next Latin works on a wide body, so tracking stays at default. Apple/Cal.com-style tightening reads off-brand here.
+- **UPPERCASE inline links** — "LEARN MORE"-style CTAs run uppercase with 1.5px tracking. The "machined precision" voice.
+- **Weight 400 lives in a narrow lane** — only caption and nav-link, both neutral utility roles.
 
 ### Note on Font Substitutes
-SF Pro is Apple's proprietary system font. When building off-system:
-
-- Use `system-ui, -apple-system, BlinkMacSystemFont` as the first stack entry — on macOS/iOS/Safari this resolves to the real SF Pro.
-- For non-Apple platforms, **Inter** (Google Fonts, variable) is the closest open-source equivalent. Inter at weight 600 with `font-feature-settings: "ss03"` approximates SF Pro's rounded "a" character.
-- Nudge `letter-spacing` down by `-0.01em` on display sizes to re-create the Apple tight feel; Inter's default tracking runs slightly wider than SF Pro.
-- For body text, tighten line-height by `0.03` (from 1.47 → 1.44) when substituting Inter — Inter's taller x-height needs less leading.
+BMW Type Next Latin is a licensed BMW typeface. Open-source alternatives:
+- **Inter** (variable) — close match at weight 700/300. Leave letter-spacing at 0.0em.
+- **Saira Condensed** — for a slightly more compressed BMW Type feel.
 
 ## Layout
 
 ### Spacing System
-- **Base unit:** 8px. Sub-base values (2, 4, 5, 6, 7) are used for tight typographic adjustments; structural layout snaps to 8/12/16/20/24.
-- **Tokens:** `{spacing.xxs}` 4px · `{spacing.xs}` 8px · `{spacing.sm}` 12px · `{spacing.md}` 17px · `{spacing.lg}` 24px · `{spacing.xl}` 32px · `{spacing.xxl}` 48px · `{spacing.section}` 80px.
-- **Section vertical padding:** `{spacing.section}` (80px) inside a product tile; tiles stack edge-to-edge with 0 gap (the color change provides the break).
-- **Card padding:** `{spacing.lg}` (24px) inside utility grid cards.
-- **Button padding:** 8–11px vertical, 15–22px horizontal.
-- **Universal rhythm constants:** the 17px body line-height multiplier (~25px line) and 21px tagline size show up on every analyzed page.
+- **Base unit:** 8px.
+- **Tokens:** `{spacing.xxs}` 4px · `{spacing.xs}` 8px · `{spacing.sm}` 12px · `{spacing.md}` 16px · `{spacing.lg}` 24px · `{spacing.xl}` 32px · `{spacing.xxl}` 48px · `{spacing.section}` 80px.
+- **Section padding:** `{spacing.section}` (80px) for every major editorial band.
+- **Card internal padding:** `{spacing.lg}` (24px) for model and feature cards.
 
 ### Grid & Container
-- **Max content width:** ~980px on text-heavy sections (environment), ~1440px on product grids (store, accessories), full-bleed for product tiles (homepage).
-- **Column patterns:** 3 to 5 column utility card grid on store/accessories; 2-column side-by-side tiles on homepage occasional sections; single-column centered stack on product tile heroes.
-- **Gutters:** 20–24px between cards in a utility grid.
+- **Max content width:** ~1440px center-aligned.
+- **Editorial body:** A single 12-column grid.
+- **Model card grids:** 4-up or 5-up at desktop, 2-up at tablet, 1-up on mobile.
+- **Configurator inventory grids:** 3-up filter row + 4-up vehicle cards, dense layout.
 
 ### Whitespace Philosophy
-Apple's whitespace is the product's pedestal. Every tile begins with at least 64px of air above its headline and 48–64px below. Product renders are never crowded; the nearest content to a product image is at least 40px away. The footer is the only area that breaks this — there, Apple goes deliberately dense to make the full information architecture visible at a glance.
+BMW's whitespace strategy is tighter than BMW M's motorsport-aerated grenadier — the corporate side is more utility-driven. Section rhythm is 80px (not M's 96px). Card padding is 24px (not M's 32px). The page is denser, more dealership-functional.
 
 ## Elevation & Depth
 
 | Level | Treatment | Use |
 |---|---|---|
-| Flat | No shadow, no border | Full-bleed tiles, global nav, footer, body sections |
-| Soft hairline | 1px `rgba(0, 0, 0, 0.08)` border | Utility cards, sub-nav frosted-glass separator |
-| Backdrop blur | `backdrop-filter: blur(N)` on Parchment 80% | Sub-nav and the iPhone buy floating sticky bar |
-| Product shadow | `rgba(0, 0, 0, 0.22) 3px 5px 30px 0` | Product renders resting on a surface (the only true "shadow" in the system) |
+| Flat | No shadow, no border | Body, top nav, footer, hero bands |
+| Soft hairline | 1px `{colors.hairline}` border | Configurator option tile, table divider |
+| Card surface | `{colors.surface-card}` background — no shadow | Model card photo plate |
+| Photographic | Edge-to-edge photography | Hero band, model renders |
 
-**Shadow philosophy.** Apple uses **exactly one** drop-shadow, and it is applied to photographic product imagery — never to cards, never to buttons, never to text. Elevation in the UI comes from (a) surface-color change (light tile ↔ dark tile) and (b) backdrop-blur on sticky bars. The single shadow is about giving the product weight, not about UI hierarchy.
+The system never uses a drop shadow. Depth comes entirely from (a) color-block contrast (light canvas vs dark hero) and (b) photographic subject + lighting.
 
 ### Decorative Depth
-- **Atmospheric imagery** on the environment page (photographic vista) supplies mood; no CSS gradient involved.
-- **Edge-to-edge tile alternation** creates rhythm without borders or shadows — the color change itself is the divider.
-- **Backdrop-filter blur** on `{component.sub-nav-frosted}` and `{component.floating-sticky-bar}` creates a "floating over content" effect that's functional, not decorative.
+- **`m-stripe-divider`** — a 4px-tall horizontal tricolor stripe (`{colors.m-blue-light}` → `{colors.m-blue-dark}` → `{colors.m-red}`). Only in M-model contexts, motorsport badges, or as an M-related section divider. Not part of the main corporate flow.
+- **Photographic depth** — full-bleed vehicle photography (lighting + subject) does the work chrome would otherwise do.
 
 ## Shapes
 
@@ -410,102 +400,101 @@ Apple's whitespace is the product's pedestal. Every tile begins with at least 64
 
 | Token | Value | Use |
 |---|---|---|
-| `{rounded.none}` | 0px | Full-bleed product tiles (no corner rounding) |
-| `{rounded.xs}` | 5px | Inline links when styled as subtle chips (rare) |
-| `{rounded.sm}` | 8px | Dark utility buttons (Sign In, Bag), inline card imagery |
-| `{rounded.md}` | 11px | White Pearl Button capsules |
-| `{rounded.lg}` | 18px | Store utility cards, accessories grid cards |
-| `{rounded.pill}` | 9999px | Primary blue pill CTAs, sub-nav buy button, configurator option chips, search input — the signature Apple pill |
-| `{rounded.full}` | 9999px / 50% | Circular control chips floating over photography |
+| `{rounded.none}` | 0px | Every button, card, input, configurator chip — the dominant radius |
+| `{rounded.xs}` | 2px | Very small badges, very rare |
+| `{rounded.sm}` | 4px | Small inline button (rare) |
+| `{rounded.md}` | 8px | Mobile-only collapse cards (rare) |
+| `{rounded.lg}` | 12px | Very rare — modal/dialog corners |
+| `{rounded.pill}` | 9999px | Filter chips in some contexts (rare) |
+| `{rounded.full}` | 9999px / 50% | Avatar, circular icon button |
+
+The radius hierarchy is binary: **rectangular for everything, circular only for icon buttons.** A clear departure from the soft-cornered SaaS dialect of Apple or Cal.com — closer to BMW corporate-automotive's "engineered precision" voice.
 
 ### Photography Geometry
-- **Hero imagery**: full-bleed, 21:9 or taller on the homepage; 16:9 on environment and shop pages. Product renders are photographic-realistic, often shot on a tinted surface that becomes the tile background.
-- **Product renders**: PNG/WebP with transparency; rest on a surface tile and pick up the system shadow.
-- **Accessory grid**: square 1:1 crops at `{rounded.lg}` (18px) radius, light neutral backgrounds, product centered with 20–40px internal padding.
-- **No rounded imagery in hero tiles** — images are full-bleed rectangular. Rounding (`{rounded.sm}`, `{rounded.lg}`) appears only on inline card imagery.
-- Lazy-loading via responsive `srcset` and `sizes` across all breakpoints; CDN-optimized WebP.
+- Hero photography is full-bleed at 16:9 or 21:9 cinematic ratio.
+- Model card photos sit at 16:10, edge-to-edge with `{rounded.none}` corners.
+- Configurator vehicle renders sit on a white studio background, full silhouette visible.
 
 ## Components
 
 ### Top Navigation
 
-**`global-nav`** — Persistent, ultra-thin black nav bar pinned to the top of every page. Background `{colors.surface-black}`, height 44px, text `{colors.on-dark}` in `{typography.nav-link}` (12px / 400 / -0.12px tracking). Links are quiet, spaced ~20px apart, running edge-to-edge across the top. Right-aligned cluster: Search, Bag icons — always visible. On mobile, collapses to hamburger at ~834px and the Apple logo centers.
-
-**`sub-nav-frosted`** — Surface-specific nav that sticks below the global nav. Background `{colors.canvas-parchment}` at 80% opacity with backdrop-filter blur, creating a frosted-glass effect. Height 52px. Content on left: product category name ("iPhone", "Store", "Accessories") in `{typography.tagline}` (21px / 600). Content right: inline nav links in `{typography.button-utility}` (14px), ending in a persistent `{component.button-primary}` ("Buy") or a utility link.
+**`top-nav`** — A white sticky nav bar pinned to the top of the page. 64px tall, `{colors.canvas}` background. Left: BMW circular badge logo; center: primary horizontal menu (Models, Next Generation, Pre-Owned, Dealers, Test Drive); right: cart icon, language picker, profile. Menu items render in `{typography.nav-link}` (14px / 400 / 0.3px tracking).
 
 ### Buttons
 
-**`button-primary`** — The signature Apple action. Background `{colors.primary}` (Action Blue #0066cc), text `{colors.on-primary}` in `{typography.body}` (SF Pro Text 17px / 400), rounded `{rounded.pill}` (full pill — capsule-shaped), padding 11px × 22px. The full-pill radius IS the brand action signal.
-- Active state: `{component.button-primary-active}` — `transform: scale(0.95)` (the system-wide micro-interaction).
-- Focus state: `{component.button-primary-focus}` — 2px solid `{colors.primary-focus}` outline.
+**`button-primary`** — The signature primary CTA. Background `{colors.primary}` (BMW Blue #1c69d4), text `{colors.on-primary}`, type `{typography.button}` (BMW Type Next Latin 14px / 700 / 0.5px tracking), padding 14px × 32px, height 48px, rounded `{rounded.none}` (0px — rectangular). Press state: `button-primary-active` shifts to `{colors.primary-active}`.
 
-**`button-secondary-pill`** — Used as the second CTA when two blue pills appear together ("Learn more" / "Buy"). Background transparent, text `{colors.primary}`, 1px solid `{colors.primary}` border, rounded `{rounded.pill}`, padding 11px × 22px. Reads as a "ghost pill."
+**`button-secondary`** — A white button with a hairline outline. Background `{colors.canvas}`, text `{colors.ink}`, 1px `{colors.hairline-strong}` border, same padding + height + radius.
 
-**`button-dark-utility`** — Global nav actions (Sign In, Bag, language selector). Background `{colors.ink}` (#1d1d1f), text `{colors.on-dark}` in `{typography.button-utility}` (14px / 400 / -0.224px tracking), rounded `{rounded.sm}` (8px), padding 8px × 15px. Active state shrinks via `transform: scale(0.95)`.
+**`button-secondary-on-dark`** — Used over a dark hero band. Background transparent, text `{colors.on-dark}`, 1px `{colors.on-dark}` border, same rectangular shape.
 
-**`button-pearl-capsule`** — Product-card secondary button. Background `{colors.surface-pearl}` (#fafafc), text `{colors.ink-muted-80}` in `{typography.caption}` (14px), 3px solid `{colors.divider-soft}` border (functions as a soft ring rather than a visible line), rounded `{rounded.md}` (11px), padding 8px × 14px.
+**`button-text-link`** — An inline UPPERCASE letter-spaced link. No background, text `{colors.ink}`, type `{typography.label-uppercase}` (13px / 700 / 1.5px tracking). Reads as "LEARN MORE", terminated by a `›` chevron.
 
-**`button-store-hero`** — A larger primary CTA used on store hero surfaces. Same Action Blue + Paper White as `{component.button-primary}`, but with `{typography.button-large}` (18px / 300 — note the rare weight 300) and slightly more padding (14px × 28px). Used sparingly on the store landing.
-
-**`button-icon-circular`** — Floats over photography. 44 × 44px, background `{colors.surface-chip-translucent}` at ~64% alpha, icon in `{colors.ink}`, rounded `{rounded.full}`. Used for carousel controls, close buttons, and in-image controls (product image thumbnails on the iPhone buy page).
-
-**`text-link`** — Inline body links in `{colors.primary}` (Action Blue). Underlined or non-underlined per context.
-
-**`text-link-on-dark`** — Inline body links on dark tiles in `{colors.primary-on-dark}` (Sky Link Blue #2997ff) — Action Blue would disappear against `{colors.surface-tile-1}`.
+**`text-link`** — An inline link inside body copy. `{colors.ink}` text, no underline by default; underlines per context.
 
 ### Cards & Containers
 
-**`product-tile-light`** — Full-bleed light tile. Background `{colors.canvas}` (white), text `{colors.ink}`, rounded `{rounded.none}` (0 — tiles touch edges), vertical padding `{spacing.section}` (80px). Centered stack: product name in `{typography.display-lg}` (40px / 600) → one-line tagline in `{typography.lead}` (28px / 400) → two `{component.button-primary}` CTAs ("Learn more" / "Buy") → product render resting on the surface with the system shadow.
+**`hero-band-dark`** — Full-width dark navy hero. Background `{colors.surface-dark}`, text `{colors.on-dark}`, vertical padding `{spacing.section}` (80px). Centered: model name in `{typography.display-xl}` (64px / 700) + sub-headline + vehicle render (right-aligned or below). A single `{component.button-primary}` (blue) or `{component.button-secondary-on-dark}`.
 
-**`product-tile-parchment`** — Same as `{component.product-tile-light}` but on `{colors.canvas-parchment}` (#f5f5f7). Used to break two consecutive white tiles.
+**`hero-photo-band`** — A light-canvas model showcase band. Background `{colors.canvas}`, text `{colors.ink}`. The vehicle render takes the wide area; right or below, a headline + two link CTAs + sub-tagline.
 
-**`product-tile-dark`** — Full-bleed dark tile. Background `{colors.surface-tile-1}` (#272729), text `{colors.on-dark}`, rounded `{rounded.none}`, vertical padding `{spacing.section}` (80px). Same content stack as the light tile but with `{component.text-link-on-dark}` for inline copy and `{component.button-primary}` (Action Blue still works on the dark surface). Used on the homepage product grid as the alternating dark band.
+**`model-card`** — Used in 4-up or 5-up model card grids on the homepage ("BMW iX3", "BMW iX", "BMW 5 Series"). Background `{colors.canvas}`, rounded `{rounded.none}`, padding `{spacing.lg}` (24px). Contents: model render at the top (`{component.model-card-photo}` on `{colors.surface-card}`), model name in `{typography.title-md}` (18px / 700) below, a one-line tagline in `{typography.body-sm}` (14px / 300), and a `{component.button-text-link}` ("LEARN MORE ›").
 
-**`product-tile-dark-2`** — Variant on `{colors.surface-tile-2}` (#2a2a2c). Used where a dark tile sits directly above or below `{component.product-tile-dark}` to create the faintest separation through micro-step lightness change.
+**`model-card-photo`** — The card's photo plate. Background `{colors.surface-card}` (#fafafa — soft grey), rounded `{rounded.none}`, vehicle render in full silhouette. Zero padding — the photo runs edge-to-edge.
 
-**`product-tile-dark-3`** — Variant on `{colors.surface-tile-3}` (#252527). Used at the bottom of the stack and in embedded video/player frames.
+**`feature-photo-card`** — A feature/lifestyle card. Background `{colors.canvas}`, padding `{spacing.lg}`. 16:9 photo at the top, `{typography.title-md}` headline + body excerpt below.
 
-**`store-utility-card`** — Used in store grid and accessories grid. Background `{colors.canvas}` (white), 1px solid `{colors.hairline}` border, rounded `{rounded.lg}` (18px), padding `{spacing.lg}` (24px). Top: product image (1:1 crop with `{rounded.sm}` (8px) inner image radius). Below: product name in `{typography.body-strong}` (17px / 600), price in `{typography.body}` (17px / 400), and a `{component.text-link}` ("Buy" or "Learn more"). No shadow by default; product render itself carries the system product-shadow.
+**`spec-cell`** — A technical spec cell (model detail page). Transparent background, separated by hairline dividers. Value on top (`{typography.display-sm}` 24px / 700), label below (`{typography.label-uppercase}`).
 
-**`configurator-option-chip`** — Pill-shaped tappable cell used in the iPhone 17 Pro buy page. Background `{colors.canvas}`, text `{colors.ink}` in `{typography.caption}`, rounded `{rounded.pill}`, padding 12px × 16px. Contains a small product thumbnail + label + price delta. Arranged in a grid of 4–5 options per row.
+### Inventory & Configurator
 
-**`configurator-option-chip-selected`** — Selected state. Border upgrades to 2px solid `{colors.primary-focus}`. Same shape, same content.
+**`inventory-card`** — One card per vehicle on the dealer inventory page. Background `{colors.canvas}`, padding `{spacing.md}` (16px), rounded `{rounded.none}`. Vehicle photo on top, model + variant name + price + "View" link below.
 
-**`environment-quote-card`** — A photographic-canvas hero specific to the environment page. Dark photographic backdrop (mountain vista at dawn) with `{colors.surface-tile-1}` as the fallback color, centered white-text headline in `{typography.display-lg}` (40px), small green "Apple 2030" pictographic logo above the headline, single `{component.button-primary}` below. Padding `{spacing.section}` (80px).
+**`filter-chip`** + **`filter-chip-active`** — Inventory filter chips (model, year, price range). Inactive: background `{colors.canvas}`, 1px `{colors.hairline-strong}` border, text `{colors.ink}`, type `{typography.caption}`. Active: background `{colors.ink}`, text `{colors.on-dark}`. Padding 8px × 14px, radius `{rounded.none}`.
 
-**`floating-sticky-bar`** — Floats at the bottom of the viewport on the iPhone 17 Pro buy page during scroll. Background `{colors.canvas-parchment}` at 80% opacity with `backdrop-filter: blur(N)`, height 64px, padding 12px × 32px. Left: running price total in `{typography.body}`. Right: `{component.button-primary}` ("Add to Bag").
+**`configurator-option-tile`** + **`configurator-option-tile-selected`** — Configurator selection cell (color, wheels, upholstery). Inactive: background `{colors.canvas}`, 1px hairline. Selected: 2px `{colors.primary}` border. Padding 16px × 24px, radius `{rounded.none}`.
 
 ### Inputs & Forms
 
-**`search-input`** — The accessories search input. Background `{colors.canvas}`, text `{colors.ink}` in `{typography.body}` (17px), 1px solid `rgba(0, 0, 0, 0.08)` border, rounded `{rounded.pill}` (full pill — search is also pill-shaped, matching the CTA grammar), padding 12px × 20px, height 44px. Leading icon: search glyph at 14px, muted tint.
+**`text-input`** — Standard text input. Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.body-md}`, rounded `{rounded.none}` (0px), padding 14px × 16px, height 48px, 1px hairline border. On focus, the border thickens to ink.
 
-Error and validation states were not surfaced in the analyzed pages.
+**`cookie-consent-card`** — Cookie banner. Background `{colors.canvas}`, 1px hairline, padding `{spacing.lg}` (24px), `{typography.body-sm}` (14px / 300 — Light even in legal copy).
 
-### Footer
+### Tabs / Tags
 
-**`footer`** — Background `{colors.canvas-parchment}` (#f5f5f7), text `{colors.ink-muted-80}`. Link columns in `{typography.dense-link}` (17px / 400 / 2.41 line-height — the relaxed leading is what makes the dense columns scannable). Column headings in `{typography.caption-strong}` (14px / 600). Legal row at the very bottom in `{typography.fine-print}` (12px / 400) with `{colors.ink-muted-48}` text. Vertical padding 64px.
+**`category-tab`** + **`category-tab-active`** — Category sub-nav. Inactive: transparent + `{colors.muted}` UPPERCASE label. Active: transparent + `{colors.ink}` UPPERCASE label + 2px ink underline. 12px vertical padding, no horizontal radius.
+
+### Brand Signature
+
+**`m-stripe-divider`** — A 4px-tall horizontal tricolor stripe (`{colors.m-blue-light}` → `{colors.m-blue-dark}` → `{colors.m-red}`). Only in M-model contexts, motorsport badges, or as an M-related section divider. Absent from the corporate main flow; on M-model detail pages and the M Performance badge it plays an inline divider role.
+
+### CTA / Footer
+
+**`cta-band-photo`** — A pre-footer "Discover the New iX3"-style band. Background `{colors.surface-dark}` with a full-bleed vehicle photo. Centered headline in `{typography.display-md}` (32px / 700) + a single `{component.button-secondary-on-dark}`. 80px padding.
+
+**`footer`** — The closing soft-grey footer. Background `{colors.surface-soft}` (#f7f7f7 — not pure white — soft grey), text `{colors.body}`. A 4-column link list: Models / Services / Dealers / About. Vertical padding 64px. Below, a copyright line in `{typography.body-sm}` with `{colors.muted}`.
 
 ## Do's and Don'ts
 
 ### Do
-- Use `{colors.primary}` (Action Blue #0066cc) for every interactive element — links, pill CTAs, focus signals — and nothing else. The single accent is non-negotiable.
-- Set headlines in `{typography.hero-display}` or `{typography.display-lg}` with negative letter-spacing (`-0.28 → -0.374px`) to get the signature "Apple tight" cadence.
-- Run body copy at `{typography.body}` (17px / 400 / 1.47 / -0.374px) — not 16px. The extra pixel defines the brand's reading pace.
-- Alternate `{component.product-tile-light}` (or parchment) and `{component.product-tile-dark}` for full-bleed section rhythm. The color change IS the divider.
-- Reserve `{rounded.pill}` for the primary blue CTA and any other element that should read as an "action" (configurator chips, search input, sticky bar CTA).
-- Apply the single product-shadow (`rgba(0, 0, 0, 0.22) 3px 5px 30px`) only to product renders resting on a surface — never on cards, buttons, or text.
-- Use `transform: scale(0.95)` as the active/press state on every button — it's the system-wide micro-interaction.
-- Keep the global nav `{colors.surface-black}` (true black) — it's the only place pure black appears on most pages.
+- Sit every page on `{colors.canvas}` (pure white); reserve `{colors.surface-dark}` for hero bands only.
+- Pair primary CTAs with `{colors.primary}` (BMW Blue) + `{colors.on-primary}` white text + `{rounded.none}` 0px corners — the corporate signature.
+- Set display headlines in BMW Type Next Latin 700 and body in Light 300. The contrast is non-negotiable.
+- Use UPPERCASE letter-spaced links like "LEARN MORE" as inline CTAs.
+- Place the model card photo on `{colors.surface-card}` with the title beneath — the standard BMW corporate pattern.
+- Hold section rhythm at `{spacing.section}` (80px) — tighter than BMW M's 96px.
+- Reserve the M tricolor stripe for M-model contexts and motorsport dividers.
 
 ### Don't
-- Don't introduce a second accent color; every "click me" signal is `{colors.primary}` (Action Blue).
-- Don't add shadows to cards, buttons, or text — shadow is reserved for product imagery.
-- Don't use gradients as decorative backgrounds; atmosphere comes from photography.
-- Don't set body copy at weight 500 — Apple's ladder is 300 / 400 / 600 / 700, with 500 deliberately absent. Body is always 400; strong inline is 600; display is 600.
-- Don't round full-bleed tiles — tiles are rectangular and edge-to-edge; the color change is the divider.
-- Don't tighten line-height below 1.47 for body copy — the editorial leading is part of the brand.
-- Don't mix radii grammars — use `{rounded.sm}` for compact utility, `{rounded.lg}` for utility cards, `{rounded.pill}` for pills, and nothing in between (except the rare `{rounded.md}` Pearl Button).
-- Don't use `{colors.primary-on-dark}` (Sky Link Blue) on light surfaces — it's the dark-tile-only variant. Action Blue is for light surfaces.
+- Don't add a brand color other than blue — BMW Blue is the only primary action color.
+- Don't use pill or rounded buttons — `{rounded.none}` (0px) rectangular IS the brand button.
+- Don't drop display weight to 500 — the system uses 700 / 400 / 300; 500 is absent.
+- Don't bold body type — Light 300 is the BMW corporate editorial voice.
+- Don't add drop shadows to cards — depth comes from photo + color-block contrast.
+- Don't repeat the same surface mode across two consecutive bands — light → dark hero → light → light feature → dark CTA → light footer rotation is required.
+- Don't use the M tricolor stripe as a CTA fill — divider/accent role only.
+- Don't mix languages in a single page — UI language must stay consistent.
 
 ## Responsive Behavior
 
@@ -513,50 +502,43 @@ Error and validation states were not surfaced in the analyzed pages.
 
 | Name | Width | Key Changes |
 |---|---|---|
-| Small phone | ≤ 419px | Single-column tiles; sub-nav collapses to category name + primary CTA only; hero typography drops to 28px |
-| Phone | 420–640px | Single-column stack; product renders scale to 80% of tile width; hero h1 drops to 34px |
-| Large phone | 641–735px | Tiles transition to tighter padding (48px vertical vs 80px); fine-print wraps |
-| Tablet portrait | 736–833px | Global nav collapses to hamburger; sub-nav hides category chips, keeps primary CTA |
-| Tablet landscape | 834–1023px | Global nav returns fully expanded; 3-column utility grids become 2-column |
-| Small desktop | 1024–1068px | Product tiles use 2/3 width with margin gutters; hero h1 stays at 40px |
-| Desktop | 1069–1440px | Full layout; 4–5 column store grids; 1440px content max |
-| Wide desktop | ≥ 1441px | Content locks at 1440px, margins absorb extra width |
-
-The structural breakpoints that matter for agents: 1440px (content lock), 1068px (small-desktop), 833px (tablet landscape switch), 734px (tablet portrait), 640px (phone), 480px (small phone).
+| Mobile | < 768px | Hamburger nav; hero h1 64→40px; model card grid 1-up; configurator filter chips 2-up; footer 4 col → 1 col |
+| Tablet | 768–1024px | Top nav narrows, secondary menu hides under "More"; model card 2-up; inventory 2-up |
+| Desktop | 1024–1440px | Full top-nav; 4-up or 5-up model card grid; inventory 3-up; full configurator UI |
+| Wide | > 1440px | Same as desktop, content fixed at 1440px; gutters absorb the rest |
 
 ### Touch Targets
-- Minimum 44 × 44px. `{component.button-primary}` lands at ~44 × 100px (with the full-pill radius making the visible hit area more generous than the label suggests).
-- `{component.button-icon-circular}` is exactly 44 × 44px.
-- Global nav utility links are smaller (~32 × 80px) — they deliberately sit at a tighter target because they're precision desktop actions, and the mobile hamburger replaces them at ≤ 833px.
+- `{component.button-primary}` minimum 48 × 48px — above WCAG AAA (44 × 44).
+- `{component.text-input}` height 48px.
+- Category tabs run with 12px vertical padding, giving an effective tap area > 44px.
 
 ### Collapsing Strategy
-- **Global nav**: full horizontal link row on desktop → collapses to Apple logo + hamburger + bag icon at 834px and below.
-- **Sub-nav**: category name + inline links + primary CTA → category name + primary CTA only at mobile; inline links move into a hamburger tray.
-- **Product tiles**: stack from 2-column to 1-column at 834px; vertical padding tightens from 80px → 48px at small-phone.
-- **Utility grids** (store, accessories): 5-col → 4-col (1440px) → 3-col (1068px) → 2-col (834px) → 1-col (640px).
-- **Hero typography**: `{typography.hero-display}` (56px) → `{typography.display-lg}` (40px) at 1068px → 34px at 640px → 28px at 419px.
+- The top nav collapses to a hamburger below 768px; the menu opens as a full-screen sheet.
+- The hero band's internal layout drops to a single column.
+- Model card grid 4-up/5-up → 2-up → 1-up.
+- The configurator filter chip row scrolls horizontally on mobile.
+- The M tricolor stripe stays at 4px height across every breakpoint.
 
 ### Image Behavior
-- All product imagery uses responsive `srcset` with breakpoint-matched crops.
-- Hero photography may switch art direction at mobile (e.g., the environment page's vista crops to a taller aspect ratio on mobile, framing the subject differently).
-- Product renders maintain their 1:1 or 4:3 aspect ratios across breakpoints; only scale changes.
-- Lazy-loading is default; the above-fold hero loads eagerly.
+- Model renders scale at every breakpoint while preserving native aspect ratios.
+- Hero photography may shift to a more vertical crop on mobile (art direction).
+- Inventory vehicle photos may move from 16:9 to 4:3 on mobile.
 
 ## Iteration Guide
 
-1. Focus on ONE component at a time. Reference its YAML key directly (`{component.product-tile-dark}`, `{component.search-input}`).
-2. Variants of an existing component (`-active`, `-focus`, `-2`, `-3`) live as separate entries in `components:`.
-3. Use `{token.refs}` everywhere — never inline hex.
-4. Never document hover. Default and Active/Pressed states only.
-5. Display headlines stay SF Pro Display 600 with negative letter-spacing. Body stays SF Pro Text 400 at 17px. The boundary is unbreakable.
-6. The single drop-shadow (`rgba(0, 0, 0, 0.22) 3px 5px 30px`) is reserved for product photography only.
-7. When in doubt about emphasis: alternate surface (light → dark tile) before adding chrome.
+1. Focus on a single component. Reference its YAML key directly (`{component.model-card}`, `{component.button-primary}`).
+2. New components default to `{rounded.none}` (0px). Use `{rounded.full}` only for circular icon buttons.
+3. Variants (`-active`, `-disabled`, `-selected`) live as separate entries inside the `components:` block.
+4. `{token.refs}` everywhere — never inline hex.
+5. Hover state is never documented. Only Default and Active/Pressed states.
+6. Display headlines stay BMW Type Next Latin 700; body stays Light 300; the trio is fixed.
+7. Keep UI strings in a single language — match the locale of the page.
 
 ## Known Gaps
 
-- Form validation and error states were not surfaced on the analyzed pages; only the neutral search input is documented.
-- The homepage's embedded video/player frame uses `{colors.surface-black}`; interior player controls are not documented (they're a platform widget, not a web-design token).
-- Some component imagery is dynamic (rotating product hero) and its specific copy varies per surface — component specs name the structure, not the rotating content.
-- Dark-mode counterparts for store and accessories utility cards were not surfaced on the analyzed pages; the system documented is the daytime/light-dominant variant Apple ships by default.
-- Atmospheric photography (environment page mountain vista) is a content asset, not a design token; the documented `{component.environment-quote-card}` describes the structural surface only.
-- The exact backdrop-filter blur radius on `{component.sub-nav-frosted}` and `{component.floating-sticky-bar}` is platform-dependent; production CSS uses `saturate(180%) blur(20px)` as a typical baseline but the value isn't formalized as a token.
+- BMW Type Next Latin is licensed to BMW and not published as a public web font; Inter at weights 700/300 is documented as the substitute.
+- Animation and transition timings (configurator color swap, model card hover-reveal) are out of scope here.
+- Form validation states beyond `{component.text-input}` focus were not extracted — error/success states would need a dedicated form page.
+- The dealer inventory sub-domain shares typography and color with the main corporate site; only UI density rises (filters, tables, prices).
+- A cookie consent overlay can occlude part of the hero — the lead hero band content may not be fully captured.
+- The M tricolor stripe appears infrequently on this corporate site; full motorsport context lives on the BMW M site.
