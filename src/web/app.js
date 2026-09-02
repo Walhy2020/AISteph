@@ -34,6 +34,7 @@ let recorderStatusRefreshing = false;
 const RECORDER_GAIN_STORAGE_KEY = "aisteph.recorder.gainDb";
 const RECORDER_DEVICE_STORAGE_KEY = "aisteph.recorder.deviceName";
 const DEVICE_RETRY_DELAYS_MS = [1000, 2000, 4000, 8000];
+const DEVICE_MONITOR_INTERVAL_MS = 5000;
 const WAVEFORM_BAR_COUNT = 43;
 const waveformBars = Array.from({ length: WAVEFORM_BAR_COUNT }, () => {
   const bar = document.createElement("span");
@@ -304,8 +305,9 @@ function renderRecordings(items) {
   elements.recordingList.replaceChildren(fragment);
 }
 
-async function loadRecorderDevices({ resetRetry = false } = {}) {
+async function loadRecorderDevices({ resetRetry = false, silent = false } = {}) {
   if (deviceLoadActive) return;
+  if (silent && document.activeElement === elements.recorderDevice) return;
   if (resetRetry) {
     clearDeviceRetry();
     deviceRetryAttempt = 0;
@@ -314,8 +316,10 @@ async function loadRecorderDevices({ resetRetry = false } = {}) {
   deviceLoadActive = true;
   const previous = elements.recorderDevice.value;
   const preferred = getPreferredDevice();
-  elements.refreshDevices.disabled = true;
-  elements.recorderDevice.disabled = true;
+  if (!silent) {
+    elements.refreshDevices.disabled = true;
+    elements.recorderDevice.disabled = true;
+  }
   try {
     const payload = await api("/api/recorder/devices");
     const selected = chooseAutomaticDevice(payload.devices, { previous, preferred });
@@ -348,48 +352,68 @@ async function loadRecorderDevices({ resetRetry = false } = {}) {
       rememberPreferredDevice(selected);
       clearDeviceRetry();
       deviceRetryAttempt = 0;
-      showMessage("已选择录音设备：" + selected, "success");
+      if (!silent || selected !== previous) {
+        showMessage("已选择录音设备：" + selected, "success");
+      }
     } else if (preferred && !names.has(preferred)) {
       const retrying = scheduleDeviceRetry();
-      showMessage(
-        retrying
-          ? "上次使用的麦克风暂未出现，正在自动重试：" + preferred
-          : "上次使用的麦克风仍未出现，请连接设备后点击刷新：" + preferred,
-        "warning"
-      );
+      if (!silent || previous) {
+        showMessage(
+          silent && previous
+            ? "录音设备已断开，正在等待重新连接：" + previous
+            : retrying
+              ? "上次使用的麦克风暂未出现，正在自动重试：" + preferred
+              : "上次使用的麦克风仍未出现，请连接设备后点击刷新：" + preferred,
+          "warning"
+        );
+      }
     } else if (payload.devices.some((device) => isVirtualAudioDevice(device.name))) {
       const retrying = scheduleDeviceRetry();
-      showMessage(
-        retrying
-          ? "目前只检测到虚拟音频设备，正在继续查找真实麦克风。"
-          : "仍只检测到虚拟音频设备，请连接耳机后点击刷新。",
-        "warning"
-      );
+      if (!silent) {
+        showMessage(
+          retrying
+            ? "目前只检测到虚拟音频设备，正在继续查找真实麦克风。"
+            : "仍只检测到虚拟音频设备，请连接耳机后点击刷新。",
+          "warning"
+        );
+      }
     } else {
       const retrying = scheduleDeviceRetry();
+      if (!silent) {
+        showMessage(
+          retrying
+            ? "未检测到可用麦克风，正在自动重试。"
+            : "未检测到可用麦克风，请检查连接后点击刷新。",
+          "error"
+        );
+      }
+    }
+  } catch (error) {
+    const retrying = scheduleDeviceRetry();
+    if (!silent) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "麦克风读取失败，正在重试…";
+      elements.recorderDevice.replaceChildren(option);
       showMessage(
-        retrying
-          ? "未检测到可用麦克风，正在自动重试。"
-          : "未检测到可用麦克风，请检查连接后点击刷新。",
+        retrying ? error.message + "，正在自动重试。" : error.message + "，请点击刷新重试。",
         "error"
       );
     }
-  } catch (error) {
-    const option = document.createElement("option");
-    option.value = "";
-    option.textContent = "麦克风读取失败，正在重试…";
-    elements.recorderDevice.replaceChildren(option);
-    const retrying = scheduleDeviceRetry();
-    showMessage(
-      retrying ? error.message + "，正在自动重试。" : error.message + "，请点击刷新重试。",
-      "error"
-    );
   } finally {
     deviceLoadActive = false;
-    elements.refreshDevices.disabled = false;
-    elements.recorderDevice.disabled = false;
+    if (!silent) {
+      elements.refreshDevices.disabled = false;
+      elements.recorderDevice.disabled = false;
+    }
     renderRecorderStatus();
   }
+}
+
+function monitorRecorderDevices() {
+  if (document.visibilityState !== "visible") return;
+  if (currentRecorderStatus.state !== "idle" || recorderRequestActive) return;
+  loadRecorderDevices({ silent: true });
 }
 
 async function refreshRecorderStatus() {
@@ -459,6 +483,8 @@ document.addEventListener("click", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") setSettingsPanel(false);
 });
+document.addEventListener("visibilitychange", monitorRecorderDevices);
+navigator.mediaDevices?.addEventListener?.("devicechange", monitorRecorderDevices);
 
 async function startRecording() {
   if (!elements.recorderDevice.value) {
@@ -528,6 +554,7 @@ await Promise.all([
 
 setInterval(() => renderRecorderStatus(), 1000);
 setInterval(refreshRecorderStatus, 5000);
+setInterval(monitorRecorderDevices, DEVICE_MONITOR_INTERVAL_MS);
 setInterval(() => {
   if (["recording", "stopping"].includes(currentRecorderStatus.state)) {
     refreshRecorderStatus();

@@ -32,7 +32,7 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.4.5并保护录音设备选择", async (t) => {
+test("管理台显示v0.4.6并监测录音设备连接状态", async (t) => {
   const { origin } = await createTestServer(t);
   const [response, stylesResponse, scriptResponse, deviceScriptResponse] = await Promise.all([
     fetch(origin),
@@ -51,7 +51,7 @@ test("管理台显示v0.4.5并保护录音设备选择", async (t) => {
   assert.equal(stylesResponse.status, 200);
   assert.equal(scriptResponse.status, 200);
   assert.equal(deviceScriptResponse.status, 200);
-  assert.match(html, /AISteph v0\.4\.5/);
+  assert.match(html, /AISteph v0\.4\.6/);
   assert.match(html, /type="module"/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
@@ -81,6 +81,9 @@ test("管理台显示v0.4.5并保护录音设备选择", async (t) => {
   assert.match(script, /}, 250\);/);
   assert.match(script, /RECORDER_DEVICE_STORAGE_KEY/);
   assert.match(script, /DEVICE_RETRY_DELAYS_MS/);
+  assert.match(script, /DEVICE_MONITOR_INTERVAL_MS = 5000/);
+  assert.match(script, /loadRecorderDevices\(\{ silent: true \}\)/);
+  assert.match(script, /录音设备已断开，正在等待重新连接/);
   assert.match(deviceScript, /网易虚拟音频设备/);
   assert.match(deviceScript, /HEADSET_DEVICE_PATTERN/);
   assert.doesNotMatch(html, /id="text-form"/);
@@ -109,7 +112,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.4.5");
+  assert.equal((await status.json()).version, "0.4.6");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
