@@ -259,6 +259,27 @@ function renderRecordings(items) {
     card.querySelector(".duration-label").textContent = `时长 ${formatDuration(item.durationSeconds)}`;
 
     const audio = card.querySelector("audio");
+    const deleteButton = card.querySelector(".delete-recording-button");
+    deleteButton.addEventListener("click", async () => {
+      const title = item.title || "未命名录音";
+      const confirmed = window.confirm(
+        `确定删除“${title}”吗？\n\n音频文件、处理队列和待审核资料将永久删除。`
+      );
+      if (!confirmed) return;
+
+      audio.pause();
+      deleteButton.disabled = true;
+      deleteButton.textContent = "删除中…";
+      try {
+        await api(`/api/inbox/audio/${encodeURIComponent(item.id)}`, { method: "DELETE" });
+        showMessage(`已删除录音：${title}`, "success");
+        await refreshDashboard();
+      } catch (error) {
+        deleteButton.disabled = false;
+        deleteButton.textContent = "删除";
+        showMessage(error.message, "error");
+      }
+    });
     if (item.audioUrl) {
       audio.src = item.audioUrl;
       audio.addEventListener("play", () => {
@@ -271,7 +292,7 @@ function renderRecordings(items) {
         audio.title = "播放失败";
       });
     } else {
-      audio.remove();
+      audio.hidden = true;
       card.classList.add("playback-error");
       const unavailable = document.createElement("span");
       unavailable.className = "playback-unavailable";

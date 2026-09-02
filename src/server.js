@@ -10,7 +10,7 @@ import { loadConfig } from "./core/config.js";
 import { createLogger } from "./core/logger.js";
 import { initializeWorkspace } from "./core/workspace.js";
 import { addLink, addText, importFile } from "./core/intake.js";
-import { getInboxStats, listInbox } from "./core/inbox.js";
+import { deleteAudioRecord, getInboxStats, listInbox } from "./core/inbox.js";
 import { createRecorder } from "./core/recorder.js";
 import { createAudioUrl, serveAudio } from "./core/media.js";
 import { getVersion } from "./version.js";
@@ -214,6 +214,19 @@ async function handleApi(context, request, response, requestUrl) {
 
   if (request.method === "GET" && requestUrl.pathname === "/api/recorder/status") {
     sendJson(response, 200, recorder.status());
+    return;
+  }
+
+  if (request.method === "DELETE" && requestUrl.pathname.startsWith("/api/inbox/audio/")) {
+    requireSameOrigin(request, origin);
+    const encodedId = requestUrl.pathname.slice("/api/inbox/audio/".length);
+    let sourceId;
+    try {
+      sourceId = decodeURIComponent(encodedId);
+    } catch {
+      throw new HttpError(400, "录音记录ID无效");
+    }
+    sendJson(response, 200, await deleteAudioRecord(config, log, sourceId));
     return;
   }
 

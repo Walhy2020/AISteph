@@ -1,7 +1,29 @@
 import path from "node:path";
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, rm } from "node:fs/promises";
 
 const MAX_LIST_LIMIT = 200;
+const SOURCE_ID_PATTERN = /^SRC-[A-Za-z0-9-]+$/;
+
+export class InboxRecordError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.name = "InboxRecordError";
+    this.statusCode = statusCode;
+  }
+}
+
+function resolveContainedPath(rootPath, suppliedPath, errorMessage) {
+  if (typeof suppliedPath !== "string" || !suppliedPath.trim()) {
+    throw new InboxRecordError(409, errorMessage);
+  }
+  const root = path.resolve(rootPath);
+  const resolved = path.resolve(suppliedPath);
+  const relative = path.relative(root, resolved);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new InboxRecordError(409, errorMessage);
+  }
+  return resolved;
+}
 
 function normalizeLimit(value) {
   const parsed = Number.parseInt(value, 10);
@@ -113,4 +135,61 @@ export async function getInboxStats(config) {
     byType,
     byStatus
   };
+}
+
+export async function deleteAudioRecord(config, log, sourceId) {
+  if (!SOURCE_ID_PATTERN.test(String(sourceId ?? ""))) {
+    throw new InboxRecordError(400, "录音记录ID无效");
+  }
+
+  const recordPath = path.join(config.dataRootPath, "records", `${sourceId}.json`);
+  let record;
+  try {
+    record = JSON.parse(await readFile(recordPath, "utf8"));
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      throw new InboxRecordError(404, "录音记录不存在");
+    }
+    throw new InboxRecordError(409, "录音记录无法读取，未执行删除");
+  }
+
+  if (record.id !== sourceId || record.type !== "audio") {
+    throw new InboxRecordError(409, "该记录不是可删除的录音记录");
+  }
+
+  const sourcePath = typeof record.sourcePath === "string"
+    ? path.resolve(config.workspaceRoot, record.sourcePath)
+    : record.sourcePath;
+  const inboxNotePath = typeof record.inboxNotePath === "string"
+    ? path.resolve(config.workspaceRoot, record.inboxNotePath)
+    : record.inboxNotePath;
+  const audioPath = resolveContainedPath(
+    path.join(config.dataRootPath, "audio"),
+    sourcePath,
+    "录音文件路径不安全，未执行删除"
+  );
+  const notePath = resolveContainedPath(
+    path.join(config.vaultRootPath, "00_Inbox", "Review"),
+    inboxNotePath,
+    "待审核笔记路径不安全，未执行删除"
+  );
+  const queuePath = path.join(config.dataRootPath, "queue", `${sourceId}.json`);
+
+  try {
+    await Promise.all([
+      rm(audioPath, { force: true }),
+      rm(queuePath, { force: true }),
+      rm(notePath, { force: true })
+    ]);
+    await rm(recordPath);
+  } catch {
+    throw new InboxRecordError(500, "录音相关文件清理失败，记录已保留以便重试");
+  }
+
+  await log("info", "inbox.audio_deleted", {
+    sourceId,
+    title: record.title ?? null
+  }).catch(() => {});
+
+  return { deleted: true, sourceId };
 }

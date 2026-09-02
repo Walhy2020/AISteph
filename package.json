@@ -1,6 +1,6 @@
 {
   "name": "aisteph",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "description": "Local-first personal information intake and knowledge organization",
   "type": "module",

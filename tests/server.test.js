@@ -32,7 +32,7 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.4.4并保护录音设备选择", async (t) => {
+test("管理台显示v0.4.5并保护录音设备选择", async (t) => {
   const { origin } = await createTestServer(t);
   const [response, stylesResponse, scriptResponse, deviceScriptResponse] = await Promise.all([
     fetch(origin),
@@ -51,11 +51,14 @@ test("管理台显示v0.4.4并保护录音设备选择", async (t) => {
   assert.equal(stylesResponse.status, 200);
   assert.equal(scriptResponse.status, 200);
   assert.equal(deviceScriptResponse.status, 200);
-  assert.match(html, /AISteph v0\.4\.4/);
+  assert.match(html, /AISteph v0\.4\.5/);
   assert.match(html, /type="module"/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
   assert.match(html, /<audio controls preload="metadata"><\/audio>/);
+  assert.match(html, /class="delete-recording-button"/);
+  assert.match(script, /method: "DELETE"/);
+  assert.match(script, /音频文件、处理队列和待审核资料将永久删除/);
   assert.match(html, /id="recording-toggle"/);
   assert.match(html, /id="recorder-settings-toggle"/);
   assert.match(html, /id="recorder-settings-panel"/);
@@ -106,7 +109,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.4.4");
+  assert.equal((await status.json()).version, "0.4.5");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
@@ -184,6 +187,46 @@ test("服务拒绝绑定到非本机地址", async (t) => {
     host: "0.0.0.0"
   });
   await assert.rejects(() => app.start(), /只允许绑定127\.0\.0\.1/);
+});
+test("删除录音API要求令牌和同源请求并同步清理关联文件", async (t) => {
+  const { app, origin } = await createTestServer(t);
+  const sourceId = "SRC-AUDIO-DELETE-API";
+  const audioPath = path.join(app.config.dataRootPath, "audio", "2026-09-02", "REC-API.opus");
+  const recordPath = path.join(app.config.dataRootPath, "records", `${sourceId}.json`);
+  const queuePath = path.join(app.config.dataRootPath, "queue", `${sourceId}.json`);
+  const notePath = path.join(app.config.vaultRootPath, "00_Inbox", "Review", `${sourceId}.md`);
+  await mkdir(path.dirname(audioPath), { recursive: true });
+  await writeFile(audioPath, "temporary API audio", "utf8");
+  await writeFile(recordPath, JSON.stringify({
+    id: sourceId,
+    type: "audio",
+    title: "接口删除测试",
+    sourcePath: "./data/audio/2026-09-02/REC-API.opus",
+    inboxNotePath: `./vault/00_Inbox/Review/${sourceId}.md`
+  }), "utf8");
+  await writeFile(queuePath, JSON.stringify({ sourceId }), "utf8");
+  await writeFile(notePath, "temporary review note", "utf8");
+
+  const unauthorized = await fetch(`${origin}/api/inbox/audio/${sourceId}`, {
+    method: "DELETE"
+  });
+  assert.equal(unauthorized.status, 403);
+
+  const crossOrigin = await fetch(`${origin}/api/inbox/audio/${sourceId}`, {
+    method: "DELETE",
+    headers: tokenHeaders(app, "https://untrusted.example")
+  });
+  assert.equal(crossOrigin.status, 403);
+
+  const response = await fetch(`${origin}/api/inbox/audio/${sourceId}`, {
+    method: "DELETE",
+    headers: tokenHeaders(app, origin)
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { deleted: true, sourceId });
+  for (const filePath of [audioPath, recordPath, queuePath, notePath]) {
+    await assert.rejects(readFile(filePath), (error) => error.code === "ENOENT");
+  }
 });
 test("录音API枚举设备、启动、查询状态并在停止后返回统一记录", async (t) => {
   const calls = [];

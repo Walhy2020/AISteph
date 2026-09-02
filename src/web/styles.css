@@ -673,6 +673,37 @@ audio:focus-visible {
   font-size: 10px;
 }
 
+.card-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-recording-button {
+  min-height: 25px;
+  padding: 3px 8px;
+  border: 1px solid rgba(198, 72, 63, 0.22);
+  border-radius: 7px;
+  background: transparent;
+  color: #9d4740;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.delete-recording-button:hover:not(:disabled),
+.delete-recording-button:focus-visible {
+  border-color: rgba(198, 72, 63, 0.55);
+  background: rgba(198, 72, 63, 0.08);
+  color: var(--red-dark);
+}
+
+.delete-recording-button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .recording-card audio {
   width: 100%;
   height: 34px;
