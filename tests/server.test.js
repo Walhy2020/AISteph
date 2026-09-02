@@ -32,7 +32,7 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.5.2并遵循Notion DESIGN设计系统", async (t) => {
+test("管理台显示v0.6.0并遵循Notion DESIGN设计系统", async (t) => {
   const { origin } = await createTestServer(t);
   const [response, stylesResponse, scriptResponse, deviceScriptResponse] = await Promise.all([
     fetch(origin),
@@ -51,7 +51,7 @@ test("管理台显示v0.5.2并遵循Notion DESIGN设计系统", async (t) => {
   assert.equal(stylesResponse.status, 200);
   assert.equal(scriptResponse.status, 200);
   assert.equal(deviceScriptResponse.status, 200);
-  assert.match(html, /AISteph v0\.5\.2/);
+  assert.match(html, /AISteph v0\.6\.0/);
   assert.match(html, /type="module"/);
   assert.match(html, /class="topbar top-nav"/);
   assert.match(html, /class="recorder-panel hero-band-dark"/);
@@ -64,6 +64,8 @@ test("管理台显示v0.5.2并遵循Notion DESIGN设计系统", async (t) => {
   assert.match(html, /<audio controls preload="metadata"><\/audio>/);
   assert.match(html, /class="delete-recording-button"/);
   assert.match(html, /id="recording-toggle"/);
+  assert.match(html, /aria-keyshortcuts="Control\+Alt\+R"/);
+  assert.match(html, /全局快捷键 Ctrl \+ Alt \+ R/);
   assert.match(html, /id="recorder-settings-toggle"/);
   assert.match(html, /id="recorder-settings-panel"/);
   assert.match(html, /id="recorder-gain"/);
@@ -101,6 +103,8 @@ test("管理台显示v0.5.2并遵循Notion DESIGN设计系统", async (t) => {
   assert.match(styles, /\.recording-console\.recording \.recording-waveform/);
 
   assert.match(script, /method: "DELETE"/);
+  assert.match(script, /\/api\/recorder\/preferences/);
+  assert.match(script, /syncRecorderPreferences/);
   assert.match(script, /音频文件、处理队列和待审核资料将永久删除/);
   assert.match(script, /WAVEFORM_BAR_COUNT = 43/);
   assert.match(script, /audioLevelDb/);
@@ -133,7 +137,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.5.2");
+  assert.equal((await status.json()).version, "0.6.0");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {
@@ -328,4 +332,88 @@ test("录音API枚举设备、启动、查询状态并在停止后返回统一�
     "start",
     { deviceName: "API Test Microphone", title: "API录音", gainDb: 9 }
   ]);
+});
+test("全局快捷键接口只使用已确认的实体麦克风并可切换录音状态", async (t) => {
+  const calls = [];
+  let state = { state: "idle", lastError: null };
+  let devices = [{ name: "Desk Microphone" }, { name: "网易虚拟音频设备" }];
+  const recorder = {
+    async listDevices() {
+      calls.push("devices");
+      return devices;
+    },
+    status() {
+      return state;
+    },
+    async start(input) {
+      calls.push(["start", input]);
+      state = {
+        state: "recording",
+        deviceName: input.deviceName,
+        gainDb: input.gainDb,
+        startedAt: new Date().toISOString(),
+        lastError: null
+      };
+      return state;
+    },
+    async stop() {
+      calls.push("stop");
+      state = { state: "idle", lastError: null };
+      return { id: "SRC-HOTKEY", type: "audio", status: "pending_review" };
+    },
+    async shutdown() {}
+  };
+  const { app, origin } = await createTestServer(t, {}, { recorder });
+
+  const unavailablePreference = await fetch(`${origin}/api/recorder/preferences`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin, { "Content-Type": "application/json" }),
+    body: JSON.stringify({ deviceName: "HUAWEI FreeBuds", gainDb: 7 })
+  });
+  assert.equal(unavailablePreference.status, 200);
+
+  const unavailableToggle = await fetch(`${origin}/api/recorder/toggle`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin)
+  });
+  assert.equal(unavailableToggle.status, 409);
+  assert.match((await unavailableToggle.json()).error, /默认麦克风当前不可用/);
+  assert.equal(calls.some((item) => Array.isArray(item)), false);
+
+  const preferenceResponse = await fetch(`${origin}/api/recorder/preferences`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin, { "Content-Type": "application/json" }),
+    body: JSON.stringify({ deviceName: "Desk Microphone", gainDb: 7 })
+  });
+  assert.deepEqual(await preferenceResponse.json(), {
+    deviceName: "Desk Microphone",
+    gainDb: 7
+  });
+
+  const startResponse = await fetch(`${origin}/api/recorder/toggle`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin)
+  });
+  assert.equal(startResponse.status, 202);
+  assert.equal((await startResponse.json()).action, "started");
+  assert.deepEqual(calls.find((item) => Array.isArray(item)), [
+    "start",
+    { deviceName: "Desk Microphone", title: "", gainDb: 7 }
+  ]);
+
+  const stopResponse = await fetch(`${origin}/api/recorder/toggle`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin)
+  });
+  assert.equal(stopResponse.status, 201);
+  assert.equal((await stopResponse.json()).action, "stopped");
+  assert.equal(calls.at(-1), "stop");
+
+  devices = [{ name: "网易虚拟音频设备" }];
+  const blockedPreference = await fetch(`${origin}/api/recorder/preferences`, {
+    method: "POST",
+    headers: tokenHeaders(app, origin, { "Content-Type": "application/json" }),
+    body: JSON.stringify({ deviceName: "网易虚拟音频设备", gainDb: 0 })
+  });
+  assert.equal(blockedPreference.status, 400);
 });

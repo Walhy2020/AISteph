@@ -45,6 +45,26 @@ let waveformHistory = Array(WAVEFORM_BAR_COUNT).fill(0);
 let deviceLoadActive = false;
 let deviceRetryTimer = null;
 let deviceRetryAttempt = 0;
+let lastSyncedPreferencesKey = "";
+
+async function syncRecorderPreferences() {
+  const deviceName = elements.recorderDevice.value;
+  if (!deviceName || isVirtualAudioDevice(deviceName) || isBlockedAudioDevice(deviceName)) return;
+  const gainDb = normalizeGainDb(elements.recorderGain.value);
+  const key = `${deviceName}\n${gainDb}`;
+  if (key === lastSyncedPreferencesKey) return;
+  lastSyncedPreferencesKey = key;
+  try {
+    await api("/api/recorder/preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deviceName, gainDb })
+    });
+  } catch (error) {
+    lastSyncedPreferencesKey = "";
+    throw error;
+  }
+}
 
 function getPreferredDevice() {
   try {
@@ -350,6 +370,7 @@ async function loadRecorderDevices({ resetRetry = false, silent = false } = {}) 
     elements.recorderDevice.value = selected;
     if (selected && !isVirtualAudioDevice(selected)) {
       rememberPreferredDevice(selected);
+      syncRecorderPreferences().catch(() => {});
       clearDeviceRetry();
       deviceRetryAttempt = 0;
       if (!silent || selected !== previous) {
@@ -460,6 +481,7 @@ elements.recorderDevice.addEventListener("change", () => {
   const selected = elements.recorderDevice.value;
   if (selected && !isVirtualAudioDevice(selected)) {
     rememberPreferredDevice(selected);
+    syncRecorderPreferences().catch((error) => showMessage(error.message, "warning"));
     clearDeviceRetry();
     deviceRetryAttempt = 0;
     showMessage("已选择录音设备：" + selected, "success");
@@ -474,6 +496,9 @@ elements.recorderSettingsToggle.addEventListener("click", () => {
 });
 elements.recorderGain.addEventListener("input", () => {
   updateGainSetting(elements.recorderGain.value);
+});
+elements.recorderGain.addEventListener("change", () => {
+  syncRecorderPreferences().catch((error) => showMessage(error.message, "warning"));
 });
 document.addEventListener("click", (event) => {
   if (elements.recorderSettingsPanel.hidden) return;

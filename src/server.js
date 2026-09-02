@@ -1,7 +1,8 @@
 import http from "node:http";
 import path from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
-import { createWriteStream } from "node:fs";
+import { createWriteStream, existsSync } from "node:fs";
+import { spawn } from "node:child_process";
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { Transform } from "node:stream";
@@ -12,12 +13,26 @@ import { initializeWorkspace } from "./core/workspace.js";
 import { addLink, addText, importFile } from "./core/intake.js";
 import { deleteAudioRecord, getInboxStats, listInbox } from "./core/inbox.js";
 import { createRecorder } from "./core/recorder.js";
+import { createRecorderPreferences } from "./core/recorder-preferences.js";
+import { chooseAutomaticDevice, isBlockedAudioDevice, isVirtualAudioDevice } from "./web/device-selection.js";
 import { createAudioUrl, serveAudio } from "./core/media.js";
 import { getVersion } from "./version.js";
 
 const HOST = "127.0.0.1";
 const JSON_LIMIT = 1024 * 1024;
 const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "web");
+const HOTKEY_HELPER_PATH = path.resolve(WEB_ROOT, "..", "..", "bin", "AIStephHotkey.exe");
+
+function launchHotkeyHelper() {
+  if (process.platform !== "win32" || !existsSync(HOTKEY_HELPER_PATH)) return null;
+  const child = spawn(HOTKEY_HELPER_PATH, [], {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true
+  });
+  child.unref();
+  return child;
+}
 const STATIC_FILES = new Map([
   ["/assets/app.js", ["app.js", "text/javascript; charset=utf-8"]],
   ["/assets/device-selection.js", ["device-selection.js", "text/javascript; charset=utf-8"]],
@@ -153,7 +168,7 @@ async function serveStatic(pathname, response) {
 }
 
 async function handleApi(context, request, response, requestUrl) {
-  const { config, log, recorder, token, startedAt, origin } = context;
+  const { config, log, recorder, recorderPreferences, token, startedAt, origin } = context;
 
   if (requestUrl.pathname.startsWith("/api/audio/")) {
     const encodedId = requestUrl.pathname.slice("/api/audio/".length);
@@ -217,6 +232,11 @@ async function handleApi(context, request, response, requestUrl) {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/recorder/preferences") {
+    sendJson(response, 200, recorderPreferences.get());
+    return;
+  }
+
   if (request.method === "DELETE" && requestUrl.pathname.startsWith("/api/inbox/audio/")) {
     requireSameOrigin(request, origin);
     const encodedId = requestUrl.pathname.slice("/api/inbox/audio/".length);
@@ -235,6 +255,53 @@ async function handleApi(context, request, response, requestUrl) {
   }
   requireSameOrigin(request, origin);
 
+  if (requestUrl.pathname === "/api/recorder/preferences") {
+    const input = await readJson(request);
+    const deviceName = String(input.deviceName ?? "").trim().slice(0, 300);
+    if (deviceName && (isVirtualAudioDevice(deviceName) || isBlockedAudioDevice(deviceName))) {
+      throw new HttpError(400, "快捷键默认麦克风必须是实体录音设备");
+    }
+    sendJson(response, 200, await recorderPreferences.update({
+      deviceName,
+      gainDb: input.gainDb
+    }));
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/recorder/toggle") {
+    const currentStatus = recorder.status();
+    if (currentStatus.state === "recording") {
+      const record = await recorder.stop();
+      sendJson(response, 201, { action: "stopped", record });
+      return;
+    }
+    if (currentStatus.state !== "idle") {
+      throw new HttpError(409, `录音正在${currentStatus.state === "starting" ? "启动" : "停止"}，请稍候再按快捷键`);
+    }
+
+    const preferences = recorderPreferences.get();
+    const devices = await recorder.listDevices();
+    const deviceName = chooseAutomaticDevice(devices, { preferred: preferences.deviceName });
+    if (!deviceName) {
+      throw new HttpError(
+        409,
+        preferences.deviceName
+          ? `默认麦克风当前不可用：${preferences.deviceName}`
+          : "没有检测到可用的实体麦克风，请先在网页中选择录音设备"
+      );
+    }
+    if (!preferences.deviceName) {
+      await recorderPreferences.update({ deviceName });
+    }
+    const recorderStatus = await recorder.start({
+      deviceName,
+      title: "",
+      gainDb: preferences.gainDb
+    });
+    sendJson(response, 202, { action: "started", status: recorderStatus });
+    return;
+  }
+
   if (requestUrl.pathname === "/api/recorder/start") {
     const input = await readJson(request);
     const recorderStatus = await recorder.start({
@@ -242,6 +309,12 @@ async function handleApi(context, request, response, requestUrl) {
       title: String(input.title ?? "").slice(0, 200),
       gainDb: input.gainDb
     });
+    if (!isVirtualAudioDevice(input.deviceName) && !isBlockedAudioDevice(input.deviceName)) {
+      await recorderPreferences.update({
+        deviceName: input.deviceName,
+        gainDb: input.gainDb
+      });
+    }
     sendJson(response, 202, recorderStatus);
     return;
   }
@@ -305,6 +378,7 @@ export async function createAIStephServer(options = {}) {
 
   const log = createLogger(config);
   const recorder = options.recorder ?? createRecorder(config, log, options.recorderOptions);
+  const recorderPreferences = await createRecorderPreferences(config);
   const token = randomBytes(24).toString("base64url");
   const startedAt = new Date().toISOString();
   let origin = null;
@@ -315,7 +389,7 @@ export async function createAIStephServer(options = {}) {
       const requestUrl = new URL(request.url ?? "/", origin ?? "http://127.0.0.1");
       if (requestUrl.pathname.startsWith("/api/")) {
         await handleApi(
-          { config, log, recorder, token, startedAt, origin },
+          { config, log, recorder, recorderPreferences, token, startedAt, origin },
           request,
           response,
           requestUrl
@@ -371,6 +445,7 @@ export async function createAIStephServer(options = {}) {
     token,
     server,
     recorder,
+    recorderPreferences,
     get origin() {
       return origin;
     },
@@ -411,6 +486,7 @@ export async function createAIStephServer(options = {}) {
 async function runMain() {
   const app = await createAIStephServer();
   const origin = await app.start();
+  launchHotkeyHelper();
   console.log(`AISteph v${app.config.version} 管理台已启动`);
   console.log(origin);
   console.log("按 Ctrl+C 停止服务");
