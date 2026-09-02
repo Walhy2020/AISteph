@@ -5,3 +5,6 @@ config/aisteph.json
 .tmp/
 node_modules/
 *.log
+client/**/bin/
+client/**/obj/
+dist/

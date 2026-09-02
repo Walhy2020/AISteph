@@ -32,7 +32,7 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.6.0并遵循Notion DESIGN设计系统", async (t) => {
+test("管理台显示v0.7.0并遵循Notion DESIGN设计系统", async (t) => {
   const { origin } = await createTestServer(t);
   const [response, stylesResponse, scriptResponse, deviceScriptResponse] = await Promise.all([
     fetch(origin),
@@ -51,9 +51,11 @@ test("管理台显示v0.6.0并遵循Notion DESIGN设计系统", async (t) => {
   assert.equal(stylesResponse.status, 200);
   assert.equal(scriptResponse.status, 200);
   assert.equal(deviceScriptResponse.status, 200);
-  assert.match(html, /AISteph v0\.6\.0/);
+  assert.match(html, /AISteph Voice v0\.7\.0/);
   assert.match(html, /type="module"/);
   assert.match(html, /class="topbar top-nav"/);
+  assert.match(html, /<title>AISteph Voice · 录音工作台<\/title>/);
+  assert.match(html, /class="brand-mark" aria-hidden="true">S<\/span>/);
   assert.match(html, /class="recorder-panel hero-band-dark"/);
   assert.match(html, /class="workspace-mockup-card"/);
   assert.match(html, /class="hero-decoration hero-decoration-peach"/);
@@ -137,7 +139,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.6.0");
+  assert.equal((await status.json()).version, "0.7.0");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {

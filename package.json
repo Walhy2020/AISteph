@@ -1,13 +1,14 @@
 {
   "name": "aisteph",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "Local-first personal information intake and knowledge organization",
   "type": "module",
   "scripts": {
     "start": "node src/cli.js",
     "web": "node src/server.js",
-    "build:hotkey": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-hotkey-helper.ps1",
+    "build:voice": "dotnet build client/AIStephVoice/AIStephVoice.csproj --configuration Release",
+    "publish:voice": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-voice-client.ps1",
     "test": "node --test",
     "check": "node --check src/cli.js && node --check src/server.js && node --check src/web/device-selection.js && node --check src/web/app.js && node --check src/core/intake.js && node --check src/core/recorder.js && node --check src/core/recorder-preferences.js && node --check src/core/media.js && node --check src/core/inbox.js && node --check src/core/workspace.js"
   },

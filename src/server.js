@@ -1,8 +1,7 @@
 import http from "node:http";
 import path from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
-import { createWriteStream, existsSync } from "node:fs";
-import { spawn } from "node:child_process";
+import { createWriteStream } from "node:fs";
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { Transform } from "node:stream";
@@ -21,18 +20,6 @@ import { getVersion } from "./version.js";
 const HOST = "127.0.0.1";
 const JSON_LIMIT = 1024 * 1024;
 const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "web");
-const HOTKEY_HELPER_PATH = path.resolve(WEB_ROOT, "..", "..", "bin", "AIStephHotkey.exe");
-
-function launchHotkeyHelper() {
-  if (process.platform !== "win32" || !existsSync(HOTKEY_HELPER_PATH)) return null;
-  const child = spawn(HOTKEY_HELPER_PATH, [], {
-    detached: true,
-    stdio: "ignore",
-    windowsHide: true
-  });
-  child.unref();
-  return child;
-}
 const STATIC_FILES = new Map([
   ["/assets/app.js", ["app.js", "text/javascript; charset=utf-8"]],
   ["/assets/device-selection.js", ["device-selection.js", "text/javascript; charset=utf-8"]],
@@ -486,7 +473,6 @@ export async function createAIStephServer(options = {}) {
 async function runMain() {
   const app = await createAIStephServer();
   const origin = await app.start();
-  launchHotkeyHelper();
   console.log(`AISteph v${app.config.version} 管理台已启动`);
   console.log(origin);
   console.log("按 Ctrl+C 停止服务");
