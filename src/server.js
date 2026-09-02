@@ -182,6 +182,7 @@ async function handleApi(context, request, response, requestUrl) {
       version: config.version,
       startedAt,
       uptimeSeconds: Math.floor((Date.now() - Date.parse(startedAt)) / 1000),
+      recordingsPath: path.join(config.dataRootPath, "audio"),
       storage: {
         dataRoot: config.dataRoot,
         vaultRoot: config.vaultRoot,

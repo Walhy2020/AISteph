@@ -14,14 +14,40 @@
       <a class="brand" href="/" aria-label="AISteph Voice 录音工作台首页">
         <span class="brand-mark" aria-hidden="true">S</span>
         <strong>AISteph Voice</strong>
+        <span class="brand-version">v__AISTEPH_VERSION__</span>
       </a>
       <nav class="desktop-nav" aria-label="主导航">
         <a class="active" href="#recorder-section">录音</a>
         <a href="#library-section">资料库</a>
       </nav>
       <div class="topbar-meta">
-        <span class="service-pill" id="service-status"><span class="service-dot"></span><span>正在连接</span></span>
-        <span class="version-pill">v__AISTEPH_VERSION__</span>
+        <button class="app-settings-button" id="app-settings-toggle" type="button" aria-expanded="false" aria-controls="app-settings-panel"><span aria-hidden="true">⚙</span><span>设置</span></button>
+        <section class="app-settings-panel" id="app-settings-panel" aria-label="AISteph Voice 设置" hidden>
+          <div class="settings-panel-header"><div><span class="eyebrow">AISteph Voice</span><h2>设置</h2></div><button class="settings-close-button" id="app-settings-close" type="button" aria-label="关闭设置">×</button></div>
+          <div class="settings-group">
+            <div class="gain-heading"><span>增益增强</span><output id="recorder-gain-value" for="recorder-gain">0 dB</output></div>
+            <input id="recorder-gain" type="range" min="0" max="24" step="1" value="0" aria-label="录音增益，单位分贝">
+            <div class="gain-scale" aria-hidden="true"><span>原始</span><span>更响</span></div>
+          </div>
+          <div class="settings-row">
+            <div><strong>录音快捷键</strong><span>无需打开窗口即可开始或停止</span></div>
+            <kbd id="recording-hotkey">Ctrl + Alt + R</kbd>
+          </div>
+          <label class="settings-row settings-toggle-row" for="start-with-windows">
+            <div><strong>跟随系统启动</strong><span>登录 Windows 后自动运行</span></div>
+            <input id="start-with-windows" type="checkbox" disabled>
+          </label>
+          <div class="settings-location">
+            <div><strong>录音文件位置</strong><span>原始录音保存在本机</span></div>
+            <code id="recordings-path">正在读取…</code>
+            <button class="secondary-button" id="open-recordings-folder" type="button" disabled>打开文件夹</button>
+          </div>
+          <div class="settings-row">
+            <div><strong>在线更新</strong><span>检查 AISteph Voice 最新稳定版</span></div>
+            <button class="secondary-button" id="check-app-update" type="button" disabled>检查更新</button>
+          </div>
+          <p class="settings-message" id="desktop-settings-message" role="status" aria-live="polite"></p>
+        </section>
       </div>
       <details class="mobile-menu">
         <summary aria-label="打开导航菜单"><span aria-hidden="true">☰</span></summary>
@@ -66,13 +92,7 @@
                 <span class="field-label">录音设备</span>
                 <div class="device-row">
                   <select id="recorder-device" aria-label="录音麦克风"><option value="">正在读取麦克风…</option></select>
-                  <button class="device-settings-button" id="recorder-settings-toggle" type="button" aria-label="录音设备设置" aria-expanded="false" aria-controls="recorder-settings-panel" title="录音设备设置"><span aria-hidden="true">⚙</span></button>
                   <button class="secondary-button" id="refresh-devices" type="button">刷新设备</button>
-                </div>
-                <div class="device-settings-panel" id="recorder-settings-panel" hidden>
-                  <div class="gain-heading"><span>录音增益</span><output id="recorder-gain-value" for="recorder-gain">0 dB</output></div>
-                  <input id="recorder-gain" type="range" min="0" max="24" step="1" value="0" aria-label="录音增益，单位分贝">
-                  <div class="gain-scale" aria-hidden="true"><span>原始</span><span>更响</span></div>
                 </div>
               </div>
 
@@ -86,7 +106,7 @@
               <button class="record-toggle-button" id="recording-toggle" type="button" aria-keyshortcuts="Control+Alt+R"><span class="record-toggle-icon"></span><span class="record-toggle-label">开始录音</span></button>
             </div>
             <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
-            <div class="recorder-footnote"><span>全局快捷键 Ctrl + Alt + R</span><span>停止后自动进入资料库</span></div>
+            <div class="recorder-footnote"><span>停止后自动进入资料库</span></div>
           </div>
         </div>
       </div>

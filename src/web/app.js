@@ -8,17 +8,23 @@ const token = document.querySelector('meta[name="aisteph-token"]').content;
 const version = document.querySelector('meta[name="aisteph-version"]').content;
 
 const elements = {
-  serviceStatus: document.querySelector("#service-status"),
   recorderStatus: document.querySelector("#recorder-status"),
   recorderStateLabel: document.querySelector("#recorder-state-label"),
   recorderDuration: document.querySelector("#recorder-duration"),
   recorderWaveform: document.querySelector("#recording-waveform"),
   recorderDevice: document.querySelector("#recorder-device"),
   recorderTitle: document.querySelector("#recorder-title"),
-  recorderSettingsToggle: document.querySelector("#recorder-settings-toggle"),
-  recorderSettingsPanel: document.querySelector("#recorder-settings-panel"),
+  appSettingsToggle: document.querySelector("#app-settings-toggle"),
+  appSettingsPanel: document.querySelector("#app-settings-panel"),
+  appSettingsClose: document.querySelector("#app-settings-close"),
   recorderGain: document.querySelector("#recorder-gain"),
   recorderGainValue: document.querySelector("#recorder-gain-value"),
+  recordingHotkey: document.querySelector("#recording-hotkey"),
+  startWithWindows: document.querySelector("#start-with-windows"),
+  recordingsPath: document.querySelector("#recordings-path"),
+  openRecordingsFolder: document.querySelector("#open-recordings-folder"),
+  checkAppUpdate: document.querySelector("#check-app-update"),
+  desktopSettingsMessage: document.querySelector("#desktop-settings-message"),
   refreshDevices: document.querySelector("#refresh-devices"),
   recordingToggle: document.querySelector("#recording-toggle"),
   recordingToggleLabel: document.querySelector(".record-toggle-label"),
@@ -141,8 +147,9 @@ function updateGainSetting(value, persist = true) {
 }
 
 function setSettingsPanel(open) {
-  elements.recorderSettingsPanel.hidden = !open;
-  elements.recorderSettingsToggle.setAttribute("aria-expanded", String(open));
+  elements.appSettingsPanel.hidden = !open;
+  elements.appSettingsToggle.setAttribute("aria-expanded", String(open));
+  if (open) requestDesktopSettings();
 }
 
 try {
@@ -151,6 +158,59 @@ try {
   updateGainSetting(0, false);
 }
 
+const desktopBridge = window.chrome?.webview ?? null;
+let desktopSettingsAvailable = false;
+
+function showSettingsMessage(message, kind = "") {
+  elements.desktopSettingsMessage.className = `settings-message ${kind}`.trim();
+  elements.desktopSettingsMessage.textContent = message;
+}
+
+function applyDesktopSettings(settings) {
+  desktopSettingsAvailable = Boolean(settings?.isDesktopClient);
+  elements.recordingHotkey.textContent = settings?.hotkey || "Ctrl + Alt + R";
+  elements.startWithWindows.checked = Boolean(settings?.startWithWindows);
+  elements.startWithWindows.disabled = !desktopSettingsAvailable;
+  elements.openRecordingsFolder.disabled = !desktopSettingsAvailable;
+  elements.checkAppUpdate.disabled = !desktopSettingsAvailable;
+  if (settings?.recordingsPath) elements.recordingsPath.textContent = settings.recordingsPath;
+  if (!desktopSettingsAvailable) {
+    showSettingsMessage("开机启动和打开文件夹仅在 AISteph Voice 客户端中可用。");
+  } else if (settings?.message) {
+    showSettingsMessage(settings.message, settings.messageKind || "success");
+  } else {
+    showSettingsMessage("");
+  }
+}
+
+function postDesktopMessage(message) {
+  if (!desktopBridge) return false;
+  desktopBridge.postMessage(message);
+  return true;
+}
+
+function requestDesktopSettings() {
+  if (postDesktopMessage({ type: "settings:get" })) return;
+  applyDesktopSettings({
+    isDesktopClient: false,
+    hotkey: "Ctrl + Alt + R"
+  });
+}
+
+if (desktopBridge) {
+  desktopBridge.addEventListener("message", (event) => {
+    const payload = event.data;
+    if (payload?.type === "settings:state") {
+      applyDesktopSettings(payload);
+      return;
+    }
+    if (payload?.type === "settings:error") {
+      showSettingsMessage(payload.message || "设置操作失败。", "error");
+      elements.startWithWindows.disabled = false;
+      return;
+    }
+  });
+}
 async function api(requestPath, options = {}) {
   const response = await fetch(requestPath, {
     ...options,
@@ -166,12 +226,6 @@ async function api(requestPath, options = {}) {
   }
   if (!response.ok) throw new Error(payload.error || `请求失败（${response.status}）`);
   return payload;
-}
-
-function setServiceStatus(online, label) {
-  elements.serviceStatus.classList.toggle("online", online);
-  elements.serviceStatus.classList.toggle("offline", !online);
-  elements.serviceStatus.querySelector("span:last-child").textContent = label;
 }
 
 function showMessage(message, kind = "") {
@@ -231,7 +285,6 @@ function renderRecorderStatus(status = currentRecorderStatus) {
 
   elements.recorderDevice.disabled = active || recorderRequestActive;
   elements.recorderTitle.disabled = active || recorderRequestActive;
-  elements.recorderSettingsToggle.disabled = active || recorderRequestActive;
   elements.recorderGain.disabled = active || recorderRequestActive;
   elements.refreshDevices.disabled = active || recorderRequestActive;
   if (active) setSettingsPanel(false);
@@ -458,11 +511,11 @@ async function refreshDashboard() {
       api("/api/status"),
       api("/api/inbox?type=audio&limit=200")
     ]);
-    setServiceStatus(true, `本地服务在线 · v${status.version}`);
-
+    if (!desktopSettingsAvailable && status.recordingsPath) {
+      elements.recordingsPath.textContent = status.recordingsPath;
+    }
     renderRecordings(inbox.items);
   } catch (error) {
-    setServiceStatus(false, "本地服务异常");
     const container = document.createElement("div");
     container.className = "error-state";
     const title = document.createElement("strong");
@@ -491,8 +544,25 @@ elements.recorderDevice.addEventListener("change", () => {
   renderRecorderStatus();
 });
 elements.refreshRecordings.addEventListener("click", refreshDashboard);
-elements.recorderSettingsToggle.addEventListener("click", () => {
-  setSettingsPanel(elements.recorderSettingsPanel.hidden);
+elements.appSettingsToggle.addEventListener("click", () => {
+  setSettingsPanel(elements.appSettingsPanel.hidden);
+});
+elements.appSettingsClose.addEventListener("click", () => setSettingsPanel(false));
+elements.startWithWindows.addEventListener("change", () => {
+  if (!desktopSettingsAvailable) return;
+  elements.startWithWindows.disabled = true;
+  showSettingsMessage("正在保存设置…");
+  postDesktopMessage({
+    type: "settings:set-startup",
+    enabled: elements.startWithWindows.checked
+  });
+});
+elements.openRecordingsFolder.addEventListener("click", () => {
+  postDesktopMessage({ type: "settings:open-recordings" });
+});
+elements.checkAppUpdate.addEventListener("click", () => {
+  showSettingsMessage("正在检查更新…");
+  postDesktopMessage({ type: "settings:check-update" });
 });
 elements.recorderGain.addEventListener("input", () => {
   updateGainSetting(elements.recorderGain.value);
@@ -501,8 +571,8 @@ elements.recorderGain.addEventListener("change", () => {
   syncRecorderPreferences().catch((error) => showMessage(error.message, "warning"));
 });
 document.addEventListener("click", (event) => {
-  if (elements.recorderSettingsPanel.hidden) return;
-  if (event.target instanceof Element && event.target.closest(".recorder-field")) return;
+  if (elements.appSettingsPanel.hidden) return;
+  if (event.target instanceof Element && event.target.closest(".topbar-meta")) return;
   setSettingsPanel(false);
 });
 document.addEventListener("keydown", (event) => {
@@ -570,7 +640,8 @@ elements.recordingToggle.addEventListener("click", async () => {
   }
   await startRecording();
 });
-document.title = `AISteph v${version} · 录音工作台`;
+document.title = `AISteph Voice v${version} · 录音工作台`;
+requestDesktopSettings();
 await Promise.all([
   refreshDashboard(),
   refreshRecorderStatus(),

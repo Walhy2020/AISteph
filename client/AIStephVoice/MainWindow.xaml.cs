@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -66,6 +67,7 @@ public partial class MainWindow : Window
         await WorkspaceView.EnsureCoreWebView2Async();
         WorkspaceView.CoreWebView2.Settings.AreDevToolsEnabled = false;
         WorkspaceView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+        WorkspaceView.CoreWebView2.WebMessageReceived += HandleWebMessageReceived;
         WorkspaceView.CoreWebView2.NavigationCompleted += HandleNavigationCompleted;
         WorkspaceView.Source = new Uri(ServiceManager.Origin + "/");
         Notify("AISteph Voice 已就绪", "按 Ctrl + Alt + R 即可开始或停止录音。", System.Windows.Forms.ToolTipIcon.Info);
@@ -101,11 +103,89 @@ public partial class MainWindow : Window
         if (eventArgs.IsSuccess)
         {
             LoadingPanel.Visibility = Visibility.Collapsed;
+            SendDesktopSettings();
             return;
         }
         LoadingMessage.Text = "工作台加载失败，请稍后重试。";
     }
 
+    private async void HandleWebMessageReceived(
+        object? sender,
+        CoreWebView2WebMessageReceivedEventArgs eventArgs
+    )
+    {
+        if (!IsTrustedMessageSource(eventArgs.Source)) return;
+        try
+        {
+            using var message = JsonDocument.Parse(eventArgs.WebMessageAsJson);
+            if (!message.RootElement.TryGetProperty("type", out var typeProperty)) return;
+            var type = typeProperty.GetString();
+            switch (type)
+            {
+                case "settings:get":
+                    SendDesktopSettings();
+                    break;
+                case "settings:set-startup":
+                    if (!message.RootElement.TryGetProperty("enabled", out var enabledProperty)
+                        || enabledProperty.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                    {
+                        throw new InvalidOperationException("开机启动设置无效。");
+                    }
+                    var enabled = enabledProperty.GetBoolean();
+                    DesktopSettings.SetStartWithWindows(enabled);
+                    SendDesktopSettings(enabled ? "已开启跟随系统启动。" : "已关闭跟随系统启动。");
+                    break;
+                case "settings:open-recordings":
+                    DesktopSettings.OpenRecordingsDirectory();
+                    SendDesktopSettings("已打开录音文件夹。");
+                    break;
+                case "settings:check-update":
+                    await CheckForUpdatesAsync(true);
+                    SendDesktopSettings("更新检查已完成。");
+                    break;
+            }
+        }
+        catch (Exception error)
+        {
+            SendDesktopError(error.Message);
+        }
+    }
+
+    private static bool IsTrustedMessageSource(string source)
+    {
+        return Uri.TryCreate(source, UriKind.Absolute, out var uri)
+            && string.Equals(
+                uri.GetLeftPart(UriPartial.Authority),
+                ServiceManager.Origin,
+                StringComparison.OrdinalIgnoreCase
+            );
+    }
+
+    private void SendDesktopSettings(string? message = null)
+    {
+        if (WorkspaceView.CoreWebView2 is null) return;
+        var payload = new
+        {
+            type = "settings:state",
+            isDesktopClient = true,
+            hotkey = DesktopSettings.HotkeyDisplay,
+            startWithWindows = DesktopSettings.IsStartWithWindowsEnabled(),
+            recordingsPath = DesktopSettings.EnsureRecordingsDirectory(),
+            message,
+            messageKind = string.IsNullOrWhiteSpace(message) ? null : "success"
+        };
+        WorkspaceView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(payload));
+    }
+
+    private void SendDesktopError(string message)
+    {
+        if (WorkspaceView.CoreWebView2 is null) return;
+        WorkspaceView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new
+        {
+            type = "settings:error",
+            message
+        }));
+    }
     private async Task ToggleRecordingAsync()
     {
         if (requestActive) return;

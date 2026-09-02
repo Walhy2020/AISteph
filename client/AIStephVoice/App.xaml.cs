@@ -15,6 +15,9 @@ public partial class App : System.Windows.Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        var launchInBackground = e.Args.Any(argument =>
+            string.Equals(argument, "--background", StringComparison.OrdinalIgnoreCase)
+        );
         instanceMutex = new Mutex(true, MutexName, out var createdNew);
         ownsInstanceMutex = createdNew;
         if (!createdNew)
@@ -43,6 +46,7 @@ public partial class App : System.Windows.Application
             window.Show();
             ListenForActivation(window, activationCancellation.Token);
             await window.InitializeAsync();
+            if (launchInBackground) window.Hide();
         }
         catch (Exception error)
         {

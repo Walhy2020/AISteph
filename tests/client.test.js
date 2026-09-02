@@ -7,15 +7,17 @@ async function read(relativePath, encoding = "utf8") {
 }
 
 test("AISteph Voice客户端具备单实例、托盘、快捷键和内嵌工作台", async () => {
-  const [project, app, window, hotkey, service, iconSvg, webHtml, webStyles] = await Promise.all([
+  const [project, app, window, hotkey, service, desktopSettings, iconSvg, webHtml, webStyles, webScript] = await Promise.all([
     read("client/AIStephVoice/AIStephVoice.csproj"),
     read("client/AIStephVoice/App.xaml.cs"),
     read("client/AIStephVoice/MainWindow.xaml.cs"),
     read("client/AIStephVoice/GlobalHotkey.cs"),
     read("client/AIStephVoice/ServiceManager.cs"),
+    read("client/AIStephVoice/DesktopSettings.cs"),
     read("assets/branding/aisteph-voice-icon.svg"),
     read("src/web/index.html"),
-    read("src/web/styles.css")
+    read("src/web/styles.css"),
+    read("src/web/app.js")
   ]);
 
   assert.match(project, /<Version>0\.7\.0<\/Version>/);
@@ -27,24 +29,40 @@ test("AISteph Voice客户端具备单实例、托盘、快捷键和内嵌工作�
   assert.match(app, /EventWaitHandle\.OpenExisting/);
   assert.match(app, /window\.ShowAndActivate/);
   assert.match(app, /if \(ownsInstanceMutex\)/);
+  assert.match(app, /--background/);
+  assert.match(app, /window\.Hide/);
   assert.match(window, /NotifyIcon/);
   assert.match(window, /EnsureCoreWebView2Async/);
   assert.match(window, /Ctrl \+ Alt \+ R/);
   assert.match(window, /TimeSpan\.FromHours\(12\)/);
   assert.match(window, /检查在线更新/);
+  assert.match(window, /WebMessageReceived/);
+  assert.match(window, /settings:set-startup/);
+  assert.match(window, /IsTrustedMessageSource/);
+  assert.match(window, /OpenRecordingsDirectory/);
   assert.match(hotkey, /RegisterHotKey/);
   assert.match(hotkey, /ModNoRepeat/);
   assert.match(service, /Process\.Start/);
   assert.match(service, /runtime.*src.*server\.js/s);
   assert.match(service, /SpecialFolder\.LocalApplicationData/);
   assert.match(service, /AISTEPH_DESKTOP_CLIENT/);
+  assert.match(service, /RecordingsDirectory/);
+  assert.match(desktopSettings, /CurrentVersion\\Run/);
+  assert.match(desktopSettings, /--background/);
+  assert.match(desktopSettings, /explorer\.exe/);
   assert.match(iconSvg, /fill="#2E9B64"/);
   assert.match(iconSvg, /text-anchor="end"/);
   assert.match(iconSvg, /y="128"/);
   assert.match(webHtml, /<title>AISteph Voice · 录音工作台<\/title>/);
   assert.match(webHtml, /class="brand-mark" aria-hidden="true">S<\/span>/);
+  assert.match(webHtml, /class="brand-version">v__AISTEPH_VERSION__/);
+  assert.match(webHtml, /id="app-settings-panel"/);
+  assert.doesNotMatch(webHtml, /id="service-status"/);
   assert.match(webStyles, /place-items: center end/);
   assert.match(webStyles, /background: var\(--success\)/);
+  assert.match(webStyles, /\.app-settings-panel/);
+  assert.match(webScript, /settings:set-startup/);
+  assert.match(webScript, /settings:open-recordings/);
 });
 
 test("AISteph Voice在线更新使用GitHub稳定发布页且发布包自带录音运行组件", async () => {

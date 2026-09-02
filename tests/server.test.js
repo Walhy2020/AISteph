@@ -67,10 +67,16 @@ test("管理台显示v0.7.0并遵循Notion DESIGN设计系统", async (t) => {
   assert.match(html, /class="delete-recording-button"/);
   assert.match(html, /id="recording-toggle"/);
   assert.match(html, /aria-keyshortcuts="Control\+Alt\+R"/);
-  assert.match(html, /全局快捷键 Ctrl \+ Alt \+ R/);
-  assert.match(html, /id="recorder-settings-toggle"/);
-  assert.match(html, /id="recorder-settings-panel"/);
+  assert.match(html, /class="brand-version">v0\.7\.0/);
+  assert.doesNotMatch(html, /id="service-status"/);
+  assert.match(html, /id="app-settings-toggle"/);
+  assert.match(html, /id="app-settings-panel"/);
+  assert.match(html, /增益增强/);
+  assert.match(html, /录音快捷键/);
+  assert.match(html, /跟随系统启动/);
+  assert.match(html, /录音文件位置/);
   assert.match(html, /id="recorder-gain"/);
+  assert.doesNotMatch(html, /id="recorder-settings-toggle"/);
   assert.match(html, /id="recording-waveform"/);
   assert.doesNotMatch(html, /id="recorder-device-label"/);
   assert.doesNotMatch(html, /id="text-form"/);
@@ -88,9 +94,13 @@ test("管理台显示v0.7.0并遵循Notion DESIGN设计系统", async (t) => {
   assert.match(styles, /--card-tint-mint: #d9f3e1/);
   assert.match(styles, /"Notion Sans"/);
   assert.match(styles, /height: 64px/);
+  assert.match(styles, /\.app-settings-panel/);
+  assert.doesNotMatch(styles, /\.service-pill/);
+  assert.match(script, /settings:set-startup/);
+  assert.match(script, /settings:open-recordings/);
   assert.match(styles, /width: min\(100%, 1280px\)/);
   assert.match(styles, /box-shadow: var\(--workspace-shadow\)/);
-  assert.equal((styles.match(/box-shadow:/g) || []).length, 1);
+  assert.equal((styles.match(/box-shadow:/g) || []).length, 2);
   assert.match(styles, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(styles, /@media \(max-width: 1023px\)/);
   assert.match(styles, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
@@ -139,7 +149,9 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.7.0");
+  const statusPayload = await status.json();
+  assert.equal(statusPayload.version, "0.7.0");
+  assert.equal(statusPayload.recordingsPath, path.join(app.config.dataRootPath, "audio"));
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {

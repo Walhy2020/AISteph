@@ -13,6 +13,15 @@ internal static class ServiceManager
 
     public static bool OwnsService => serviceProcess is { HasExited: false };
 
+    public static string RecordingsDirectory
+    {
+        get
+        {
+            var launch = LocateRuntime();
+            return Path.Combine(launch.WorkspaceRoot, "data", "audio");
+        }
+    }
+
     public static async Task EnsureRunningAsync()
     {
         if (await IsReadyAsync()) return;
