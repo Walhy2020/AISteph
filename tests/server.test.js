@@ -32,7 +32,7 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.5.1并遵循BMW DESIGN设计系统", async (t) => {
+test("管理台显示v0.5.2并遵循Notion DESIGN设计系统", async (t) => {
   const { origin } = await createTestServer(t);
   const [response, stylesResponse, scriptResponse, deviceScriptResponse] = await Promise.all([
     fetch(origin),
@@ -51,50 +51,57 @@ test("管理台显示v0.5.1并遵循BMW DESIGN设计系统", async (t) => {
   assert.equal(stylesResponse.status, 200);
   assert.equal(scriptResponse.status, 200);
   assert.equal(deviceScriptResponse.status, 200);
-  assert.match(html, /AISteph v0\.5\.1/);
+  assert.match(html, /AISteph v0\.5\.2/);
   assert.match(html, /type="module"/);
+  assert.match(html, /class="topbar top-nav"/);
+  assert.match(html, /class="recorder-panel hero-band-dark"/);
+  assert.match(html, /class="workspace-mockup-card"/);
+  assert.match(html, /class="hero-decoration hero-decoration-peach"/);
+  assert.match(html, /捕捉每一个想法。/);
+  assert.match(html, /录音资料库/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
   assert.match(html, /<audio controls preload="metadata"><\/audio>/);
   assert.match(html, /class="delete-recording-button"/);
-  assert.match(script, /method: "DELETE"/);
-  assert.match(script, /音频文件、处理队列和待审核资料将永久删除/);
   assert.match(html, /id="recording-toggle"/);
   assert.match(html, /id="recorder-settings-toggle"/);
   assert.match(html, /id="recorder-settings-panel"/);
   assert.match(html, /id="recorder-gain"/);
   assert.match(html, /id="recording-waveform"/);
   assert.doesNotMatch(html, /id="recorder-device-label"/);
-  assert.match(html, /class="topbar top-nav"/);
-  assert.match(html, /class="desktop-nav"/);
-  assert.match(html, /class="mobile-menu"/);
-  assert.match(html, /class="recorder-panel hero-band-dark"/);
-  assert.match(html, /id="library-section"/);
-  assert.match(html, /section-kicker">录音/);
-  assert.match(html, /捕捉每一个想法。/);
-  assert.doesNotMatch(html, /class="product-nav"/);
-  assert.doesNotMatch(html, /class="ambient/);
-  assert.doesNotMatch(html, /开始新录音/);
-  assert.doesNotMatch(html, /音频仅保存在本机/);
-  assert.doesNotMatch(html, /class="hero"/);
-  assert.doesNotMatch(html, /id="start-recording"/);
-  assert.doesNotMatch(html, /id="stop-recording"/);
+  assert.doesNotMatch(html, /id="text-form"/);
+  assert.doesNotMatch(html, /id="link-form"/);
+  assert.doesNotMatch(html, /id="file-form"/);
   assert.doesNotMatch(html, /class="record-id"/);
   assert.doesNotMatch(html, /class="source-path"/);
-  assert.match(styles, /--primary: #1c69d4/);
-  assert.match(styles, /--surface-dark: #1a2129/);
-  assert.match(styles, /--surface-card: #fafafa/);
+
+  assert.match(styles, /--primary: #5645d4/);
+  assert.match(styles, /--primary-active: #4534b3/);
+  assert.match(styles, /--brand-navy: #0a1530/);
+  assert.match(styles, /--surface: #f6f5f4/);
+  assert.match(styles, /--link: #0075de/);
+  assert.match(styles, /--card-tint-peach: #ffe8d4/);
+  assert.match(styles, /--card-tint-mint: #d9f3e1/);
+  assert.match(styles, /"Notion Sans"/);
   assert.match(styles, /height: 64px/);
-  assert.match(styles, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
-  assert.match(styles, /border-radius: 0/);
-  assert.match(styles, /font-weight: 300/);
-  assert.match(styles, /font-weight: 700/);
+  assert.match(styles, /width: min\(100%, 1280px\)/);
+  assert.match(styles, /box-shadow: var\(--workspace-shadow\)/);
+  assert.equal((styles.match(/box-shadow:/g) || []).length, 1);
+  assert.match(styles, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /@media \(max-width: 1023px\)/);
+  assert.match(styles, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(styles, /@media \(max-width: 767px\)/);
-  assert.doesNotMatch(styles, /letter-spacing: -/);
+  assert.match(styles, /@media \(max-width: 479px\)/);
+  assert.match(styles, /border-radius: 8px/);
+  assert.match(styles, /border-radius: 12px/);
+  assert.doesNotMatch(styles, /#1c69d4/);
+  assert.doesNotMatch(styles, /#1a2129/);
   assert.doesNotMatch(styles, /linear-gradient/);
-  assert.doesNotMatch(styles, /box-shadow/);
   assert.doesNotMatch(styles, /backdrop-filter/);
   assert.match(styles, /\.recording-console\.recording \.recording-waveform/);
+
+  assert.match(script, /method: "DELETE"/);
+  assert.match(script, /音频文件、处理队列和待审核资料将永久删除/);
   assert.match(script, /WAVEFORM_BAR_COUNT = 43/);
   assert.match(script, /audioLevelDb/);
   assert.match(script, /}, 250\);/);
@@ -105,14 +112,9 @@ test("管理台显示v0.5.1并遵循BMW DESIGN设计系统", async (t) => {
   assert.match(script, /录音设备已断开，正在等待重新连接/);
   assert.match(deviceScript, /网易虚拟音频设备/);
   assert.match(deviceScript, /HEADSET_DEVICE_PATTERN/);
-  assert.doesNotMatch(html, /id="text-form"/);
-  assert.doesNotMatch(html, /id="link-form"/);
-  assert.doesNotMatch(html, /id="file-form"/);
-  assert.doesNotMatch(html, /id="type-filter"/);
   assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
 });
-
 test("API要求本地令牌并拒绝跨来源写入", async (t) => {
   const { app, origin } = await createTestServer(t);
   const unauthorized = await fetch(`${origin}/api/status`);
@@ -131,7 +133,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.5.1");
+  assert.equal((await status.json()).version, "0.5.2");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {

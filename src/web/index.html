@@ -20,10 +20,7 @@
         <a href="#library-section">资料库</a>
       </nav>
       <div class="topbar-meta">
-        <span class="service-pill" id="service-status">
-          <span class="service-dot"></span>
-          <span>正在连接</span>
-        </span>
+        <span class="service-pill" id="service-status"><span class="service-dot"></span><span>正在连接</span></span>
         <span class="version-pill">v__AISTEPH_VERSION__</span>
       </div>
       <details class="mobile-menu">
@@ -37,25 +34,29 @@
   </header>
 
   <main class="page-shell">
-    <section class="workspace">
-      <section class="recorder-panel hero-band-dark" id="recorder-section">
-        <div class="recorder-shell">
-          <div class="recorder-stage">
-            <div class="recorder-heading">
-              <span class="section-kicker">录音</span>
-              <h1>捕捉每一个想法。</h1>
-              <p>在本地清晰记录，随时回听和整理。</p>
-            </div>
+    <section class="recorder-panel hero-band-dark" id="recorder-section">
+      <div class="hero-decoration hero-decoration-peach" aria-hidden="true"></div>
+      <div class="hero-decoration hero-decoration-mint" aria-hidden="true"></div>
+      <div class="hero-decoration hero-decoration-sky" aria-hidden="true"></div>
+      <div class="recorder-shell">
+        <div class="recorder-heading">
+          <span class="section-kicker">PERSONAL AUDIO WORKSPACE</span>
+          <h1>捕捉每一个想法。</h1>
+          <p>让重要的声音留在本地，随时回听，慢慢整理成属于你的知识。</p>
+        </div>
 
-            <div class="recording-console idle" id="recorder-status" aria-live="polite">
-              <div class="recording-orbit">
-                <span class="recording-core"></span>
-              </div>
-              <div class="recording-waveform" id="recording-waveform" aria-hidden="true"></div>
-              <div class="recording-state">
-                <strong id="recorder-duration">00:00</strong>
-                <span id="recorder-state-label">准备录音</span>
-              </div>
+        <div class="workspace-mockup-card">
+          <div class="workspace-card-header">
+            <div><span class="eyebrow">现在录音</span><h2>创建一条新记录</h2></div>
+            <span class="workspace-status-badge">本地保存</span>
+          </div>
+
+          <div class="recording-console idle" id="recorder-status" aria-live="polite">
+            <div class="recording-orbit"><span class="recording-core"></span></div>
+            <div class="recording-waveform" id="recording-waveform" aria-hidden="true"></div>
+            <div class="recording-state">
+              <strong id="recorder-duration">00:00</strong>
+              <span id="recorder-state-label">准备录音</span>
             </div>
           </div>
 
@@ -64,27 +65,14 @@
               <div class="recorder-field">
                 <span class="field-label">录音设备</span>
                 <div class="device-row">
-                  <select id="recorder-device" aria-label="录音麦克风">
-                    <option value="">正在读取麦克风…</option>
-                  </select>
-                  <button class="device-settings-button" id="recorder-settings-toggle" type="button"
-                    aria-label="录音设备设置" aria-expanded="false" aria-controls="recorder-settings-panel"
-                    title="录音设备设置">
-                    <span aria-hidden="true">⚙</span>
-                  </button>
+                  <select id="recorder-device" aria-label="录音麦克风"><option value="">正在读取麦克风…</option></select>
+                  <button class="device-settings-button" id="recorder-settings-toggle" type="button" aria-label="录音设备设置" aria-expanded="false" aria-controls="recorder-settings-panel" title="录音设备设置"><span aria-hidden="true">⚙</span></button>
                   <button class="secondary-button" id="refresh-devices" type="button">刷新设备</button>
                 </div>
                 <div class="device-settings-panel" id="recorder-settings-panel" hidden>
-                  <div class="gain-heading">
-                    <span>录音增益</span>
-                    <output id="recorder-gain-value" for="recorder-gain">0 dB</output>
-                  </div>
-                  <input id="recorder-gain" type="range" min="0" max="24" step="1" value="0"
-                    aria-label="录音增益，单位分贝">
-                  <div class="gain-scale" aria-hidden="true">
-                    <span>原始</span>
-                    <span>更响</span>
-                  </div>
+                  <div class="gain-heading"><span>录音增益</span><output id="recorder-gain-value" for="recorder-gain">0 dB</output></div>
+                  <input id="recorder-gain" type="range" min="0" max="24" step="1" value="0" aria-label="录音增益，单位分贝">
+                  <div class="gain-scale" aria-hidden="true"><span>原始</span><span>更响</span></div>
                 </div>
               </div>
 
@@ -95,49 +83,32 @@
             </div>
 
             <div class="recording-actions">
-              <button class="record-toggle-button" id="recording-toggle" type="button">
-                <span class="record-toggle-icon"></span>
-                <span class="record-toggle-label">开始录音</span>
-              </button>
+              <button class="record-toggle-button" id="recording-toggle" type="button"><span class="record-toggle-icon"></span><span class="record-toggle-label">开始录音</span></button>
             </div>
-
             <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
-
-            <div class="recorder-footnote">
-              <span>OPUS · 48 千赫兹</span>
-              <span>停止后自动校验并进入资料库</span>
-            </div>
+            <div class="recorder-footnote"><span>OPUS · 48 千赫兹</span><span>停止后自动进入资料库</span></div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="library-panel" id="library-section">
-        <div class="library-shell">
-          <div class="section-heading library-heading">
-            <div>
-              <span class="section-kicker">资料库</span>
-              <h2>你的录音记录</h2>
-            </div>
-            <button class="refresh-button" id="refresh-recordings" type="button" aria-label="刷新录音资料库">
-              <span>刷新资料库</span>
-              <span aria-hidden="true">↻</span>
-            </button>
+    <section class="library-panel" id="library-section">
+      <div class="library-shell">
+        <div class="section-heading library-heading">
+          <div>
+            <span class="section-kicker">AUDIO LIBRARY</span>
+            <h2>录音资料库</h2>
+            <p>每段声音都保留时间、时长和原始音频，等待你的下一步整理。</p>
           </div>
-
-          <div class="recording-list" id="recording-list" aria-live="polite">
-            <article class="skeleton-card">
-              <span class="skeleton-line wide"></span>
-              <span class="skeleton-line"></span>
-              <span class="skeleton-player"></span>
-            </article>
-            <article class="skeleton-card">
-              <span class="skeleton-line wide"></span>
-              <span class="skeleton-line short"></span>
-              <span class="skeleton-player"></span>
-            </article>
-          </div>
+          <button class="refresh-button" id="refresh-recordings" type="button" aria-label="刷新录音资料库"><span aria-hidden="true">↻</span><span>刷新资料库</span></button>
         </div>
-      </section>
+
+        <div class="recording-list" id="recording-list" aria-live="polite">
+          <article class="skeleton-card"><span class="skeleton-line wide"></span><span class="skeleton-line"></span><span class="skeleton-player"></span></article>
+          <article class="skeleton-card"><span class="skeleton-line wide"></span><span class="skeleton-line short"></span><span class="skeleton-player"></span></article>
+          <article class="skeleton-card"><span class="skeleton-line wide"></span><span class="skeleton-line"></span><span class="skeleton-player"></span></article>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -149,21 +120,13 @@
   <template id="recording-card-template">
     <article class="recording-card">
       <header class="card-header">
-        <div class="card-title-wrap">
-          <div>
-            <h3></h3>
-            <time class="captured-time"></time>
-          </div>
-        </div>
-        <div class="card-actions">
-          <span class="duration-label"></span>
-          <button class="delete-recording-button" type="button" aria-label="删除录音">删除</button>
-        </div>
+        <div class="card-title-wrap"><div><h3></h3><time class="captured-time"></time></div></div>
+        <div class="card-actions"><span class="duration-label"></span><button class="delete-recording-button" type="button" aria-label="删除录音">删除</button></div>
       </header>
       <audio controls preload="metadata"></audio>
     </article>
   </template>
 
-  <script src="/assets/app.js" defer></script>
+  <script src="/assets/app.js" type="module" defer></script>
 </body>
 </html>
