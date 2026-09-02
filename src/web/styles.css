@@ -561,6 +561,10 @@ audio:focus-visible {
   color: var(--green);
 }
 
+.form-message.warning {
+  color: var(--amber);
+}
+
 .form-message.error {
   color: var(--red-dark);
 }

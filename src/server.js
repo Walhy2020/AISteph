@@ -20,6 +20,7 @@ const JSON_LIMIT = 1024 * 1024;
 const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "web");
 const STATIC_FILES = new Map([
   ["/assets/app.js", ["app.js", "text/javascript; charset=utf-8"]],
+  ["/assets/device-selection.js", ["device-selection.js", "text/javascript; charset=utf-8"]],
   ["/assets/styles.css", ["styles.css", "text/css; charset=utf-8"]]
 ]);
 

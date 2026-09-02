@@ -1,3 +1,9 @@
+import {
+  chooseAutomaticDevice,
+  isBlockedAudioDevice,
+  isVirtualAudioDevice
+} from "/assets/device-selection.js";
+
 const token = document.querySelector('meta[name="aisteph-token"]').content;
 const version = document.querySelector('meta[name="aisteph-version"]').content;
 
@@ -26,6 +32,8 @@ let currentRecorderStatus = { state: "idle", lastError: null };
 let recorderRequestActive = false;
 let recorderStatusRefreshing = false;
 const RECORDER_GAIN_STORAGE_KEY = "aisteph.recorder.gainDb";
+const RECORDER_DEVICE_STORAGE_KEY = "aisteph.recorder.deviceName";
+const DEVICE_RETRY_DELAYS_MS = [1000, 2000, 4000, 8000];
 const WAVEFORM_BAR_COUNT = 43;
 const waveformBars = Array.from({ length: WAVEFORM_BAR_COUNT }, () => {
   const bar = document.createElement("span");
@@ -33,6 +41,41 @@ const waveformBars = Array.from({ length: WAVEFORM_BAR_COUNT }, () => {
   return bar;
 });
 let waveformHistory = Array(WAVEFORM_BAR_COUNT).fill(0);
+let deviceLoadActive = false;
+let deviceRetryTimer = null;
+let deviceRetryAttempt = 0;
+
+function getPreferredDevice() {
+  try {
+    const stored = localStorage.getItem(RECORDER_DEVICE_STORAGE_KEY) ?? "";
+    return isVirtualAudioDevice(stored) || isBlockedAudioDevice(stored) ? "" : stored;
+  } catch {
+    return "";
+  }
+}
+
+function rememberPreferredDevice(deviceName) {
+  if (!deviceName || isVirtualAudioDevice(deviceName) || isBlockedAudioDevice(deviceName)) return;
+  try {
+    localStorage.setItem(RECORDER_DEVICE_STORAGE_KEY, deviceName);
+  } catch {
+    // 本地存储不可用时，当前页面仍会保持本次选择。
+  }
+}
+
+function clearDeviceRetry() {
+  if (deviceRetryTimer) clearTimeout(deviceRetryTimer);
+  deviceRetryTimer = null;
+}
+
+function scheduleDeviceRetry() {
+  clearDeviceRetry();
+  if (deviceRetryAttempt >= DEVICE_RETRY_DELAYS_MS.length) return false;
+  const delay = DEVICE_RETRY_DELAYS_MS[deviceRetryAttempt];
+  deviceRetryAttempt += 1;
+  deviceRetryTimer = setTimeout(() => loadRecorderDevices(), delay);
+  return true;
+}
 
 function normalizeAudioLevel(levelDb) {
   const numericLevel = Number(levelDb);
@@ -240,40 +283,88 @@ function renderRecordings(items) {
   elements.recordingList.replaceChildren(fragment);
 }
 
-async function loadRecorderDevices() {
+async function loadRecorderDevices({ resetRetry = false } = {}) {
+  if (deviceLoadActive) return;
+  if (resetRetry) {
+    clearDeviceRetry();
+    deviceRetryAttempt = 0;
+  }
+
+  deviceLoadActive = true;
   const previous = elements.recorderDevice.value;
+  const preferred = getPreferredDevice();
   elements.refreshDevices.disabled = true;
   elements.recorderDevice.disabled = true;
   try {
     const payload = await api("/api/recorder/devices");
+    const selected = chooseAutomaticDevice(payload.devices, { previous, preferred });
+    const names = new Set(payload.devices.map((device) => device.name));
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = preferred && !names.has(preferred)
+      ? "正在等待上次使用的麦克风…"
+      : "请选择录音设备";
+
     const fragment = document.createDocumentFragment();
+    fragment.append(placeholder);
     for (const device of payload.devices) {
       const option = document.createElement("option");
+      const blocked = isBlockedAudioDevice(device.name);
+      const virtual = isVirtualAudioDevice(device.name);
       option.value = device.name;
-      option.textContent = device.name;
+      option.disabled = blocked;
+      option.textContent = blocked
+        ? device.name + "（不可用于录音）"
+        : virtual
+          ? device.name + "（虚拟设备，需手动选择）"
+          : device.name;
       fragment.append(option);
     }
-    if (!payload.devices.length) {
-      const option = document.createElement("option");
-      option.value = "";
-      option.textContent = "未检测到可用麦克风";
-      fragment.append(option);
-    }
+
     elements.recorderDevice.replaceChildren(fragment);
-    if (payload.devices.some((device) => device.name === previous)) {
-      elements.recorderDevice.value = previous;
+    elements.recorderDevice.value = selected;
+    if (selected && !isVirtualAudioDevice(selected)) {
+      rememberPreferredDevice(selected);
+      clearDeviceRetry();
+      deviceRetryAttempt = 0;
+      showMessage("已选择录音设备：" + selected, "success");
+    } else if (preferred && !names.has(preferred)) {
+      const retrying = scheduleDeviceRetry();
+      showMessage(
+        retrying
+          ? "上次使用的麦克风暂未出现，正在自动重试：" + preferred
+          : "上次使用的麦克风仍未出现，请连接设备后点击刷新：" + preferred,
+        "warning"
+      );
+    } else if (payload.devices.some((device) => isVirtualAudioDevice(device.name))) {
+      const retrying = scheduleDeviceRetry();
+      showMessage(
+        retrying
+          ? "目前只检测到虚拟音频设备，正在继续查找真实麦克风。"
+          : "仍只检测到虚拟音频设备，请连接耳机后点击刷新。",
+        "warning"
+      );
+    } else {
+      const retrying = scheduleDeviceRetry();
+      showMessage(
+        retrying
+          ? "未检测到可用麦克风，正在自动重试。"
+          : "未检测到可用麦克风，请检查连接后点击刷新。",
+        "error"
+      );
     }
-    showMessage(
-      payload.devices.length ? `已检测到 ${payload.devices.length} 个麦克风。` : "未检测到麦克风，请检查连接。",
-      payload.devices.length ? "" : "error"
-    );
   } catch (error) {
     const option = document.createElement("option");
     option.value = "";
-    option.textContent = "麦克风读取失败";
+    option.textContent = "麦克风读取失败，正在重试…";
     elements.recorderDevice.replaceChildren(option);
-    showMessage(error.message, "error");
+    const retrying = scheduleDeviceRetry();
+    showMessage(
+      retrying ? error.message + "，正在自动重试。" : error.message + "，请点击刷新重试。",
+      "error"
+    );
   } finally {
+    deviceLoadActive = false;
     elements.refreshDevices.disabled = false;
     elements.recorderDevice.disabled = false;
     renderRecorderStatus();
@@ -319,8 +410,19 @@ async function refreshDashboard() {
   }
 }
 
-elements.refreshDevices.addEventListener("click", loadRecorderDevices);
-elements.recorderDevice.addEventListener("change", () => renderRecorderStatus());
+elements.refreshDevices.addEventListener("click", () => loadRecorderDevices({ resetRetry: true }));
+elements.recorderDevice.addEventListener("change", () => {
+  const selected = elements.recorderDevice.value;
+  if (selected && !isVirtualAudioDevice(selected)) {
+    rememberPreferredDevice(selected);
+    clearDeviceRetry();
+    deviceRetryAttempt = 0;
+    showMessage("已选择录音设备：" + selected, "success");
+  } else if (selected) {
+    showMessage("这是虚拟音频设备，不会保存为默认麦克风。", "warning");
+  }
+  renderRecorderStatus();
+});
 elements.refreshRecordings.addEventListener("click", refreshDashboard);
 elements.recorderSettingsToggle.addEventListener("click", () => {
   setSettingsPanel(elements.recorderSettingsPanel.hidden);
@@ -339,7 +441,11 @@ document.addEventListener("keydown", (event) => {
 
 async function startRecording() {
   if (!elements.recorderDevice.value) {
-    showMessage("请先选择一个可用麦克风。", "error");
+    showMessage("请等待华为耳机出现，或手动选择一个可用麦克风。", "error");
+    return;
+  }
+  if (isBlockedAudioDevice(elements.recorderDevice.value)) {
+    showMessage("网易虚拟音频设备不可用于录音，请选择华为耳机。", "error");
     return;
   }
   recorderRequestActive = true;

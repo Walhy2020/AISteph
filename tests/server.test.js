@@ -32,23 +32,26 @@ function tokenHeaders(app, origin, extra = {}) {
   };
 }
 
-test("管理台显示v0.4.3、提供实时声纹并隐藏设备名称", async (t) => {
+test("管理台显示v0.4.4并保护录音设备选择", async (t) => {
   const { origin } = await createTestServer(t);
-  const [response, stylesResponse, scriptResponse] = await Promise.all([
+  const [response, stylesResponse, scriptResponse, deviceScriptResponse] = await Promise.all([
     fetch(origin),
     fetch(`${origin}/assets/styles.css`),
-    fetch(`${origin}/assets/app.js`)
+    fetch(`${origin}/assets/app.js`),
+    fetch(`${origin}/assets/device-selection.js`)
   ]);
-  const [html, styles, script] = await Promise.all([
+  const [html, styles, script, deviceScript] = await Promise.all([
     response.text(),
     stylesResponse.text(),
-    scriptResponse.text()
+    scriptResponse.text(),
+    deviceScriptResponse.text()
   ]);
 
   assert.equal(response.status, 200);
   assert.equal(stylesResponse.status, 200);
   assert.equal(scriptResponse.status, 200);
-  assert.match(html, /AISteph v0\.4\.3/);
+  assert.equal(deviceScriptResponse.status, 200);
+  assert.match(html, /AISteph v0\.4\.4/);
   assert.match(html, /type="module"/);
   assert.match(html, /id="recorder-status"/);
   assert.match(html, /id="recording-list"/);
@@ -73,6 +76,10 @@ test("管理台显示v0.4.3、提供实时声纹并隐藏设备名称", async (t
   assert.match(script, /WAVEFORM_BAR_COUNT = 43/);
   assert.match(script, /audioLevelDb/);
   assert.match(script, /}, 250\);/);
+  assert.match(script, /RECORDER_DEVICE_STORAGE_KEY/);
+  assert.match(script, /DEVICE_RETRY_DELAYS_MS/);
+  assert.match(deviceScript, /网易虚拟音频设备/);
+  assert.match(deviceScript, /HEADSET_DEVICE_PATTERN/);
   assert.doesNotMatch(html, /id="text-form"/);
   assert.doesNotMatch(html, /id="link-form"/);
   assert.doesNotMatch(html, /id="file-form"/);
@@ -99,7 +106,7 @@ test("API要求本地令牌并拒绝跨来源写入", async (t) => {
     headers: tokenHeaders(app, origin)
   });
   assert.equal(status.status, 200);
-  assert.equal((await status.json()).version, "0.4.3");
+  assert.equal((await status.json()).version, "0.4.4");
 });
 
 test("网页API可收录文字、链接和文件并查询待审核列表", async (t) => {

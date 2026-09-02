@@ -10,7 +10,7 @@ test("版本号在运行时、package和默认配置中保持一致", async () =
     await readFile(new URL("../package.json", import.meta.url), "utf8")
   );
 
-  assert.equal(version, "0.4.3");
+  assert.equal(version, "0.4.4");
   assert.equal(packageJson.version, version);
   assert.equal(DEFAULT_CONFIG.version, version);
 });
